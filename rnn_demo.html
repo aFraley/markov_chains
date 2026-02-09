@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RNN Name Generator</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Menlo', 'Consolas', 'Courier New', monospace;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+  h1 {
+    text-align: center;
+    color: #e94560;
+    font-size: 1.6rem;
+    margin-bottom: 0.3rem;
+  }
+  .subtitle {
+    text-align: center;
+    color: #888;
+    font-size: 0.85rem;
+    margin-bottom: 2rem;
+  }
+  .controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  .slider-group {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .slider-group label { color: #aaa; font-size: 0.85rem; }
+  .slider-group input[type="range"] {
+    width: 180px;
+    accent-color: #e94560;
+  }
+  .slider-group .temp-val {
+    color: #e94560;
+    font-weight: bold;
+    min-width: 2.5em;
+  }
+  button {
+    background: #e94560;
+    color: #fff;
+    border: none;
+    padding: 0.6rem 2rem;
+    font-family: inherit;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+  button:hover { background: #c73650; }
+  button:disabled { background: #555; cursor: not-allowed; }
+  .columns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .column h2 {
+    color: #e94560;
+    font-size: 1.05rem;
+    margin-bottom: 0.8rem;
+    border-bottom: 1px solid #333;
+    padding-bottom: 0.4rem;
+  }
+  .column ul {
+    list-style: none;
+    min-height: 200px;
+  }
+  .column li {
+    padding: 0.3rem 0;
+    color: #d0d0d0;
+    font-size: 0.95rem;
+  }
+  .column li::before {
+    content: '> ';
+    color: #555;
+  }
+  .loading {
+    text-align: center;
+    color: #888;
+    font-size: 0.85rem;
+    margin-top: 1rem;
+  }
+  @media (max-width: 640px) {
+    .columns { grid-template-columns: 1fr; }
+    body { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<h1>RNN Name Generator</h1>
+<p class="subtitle">Character-level RNN inference running in the browser &mdash; no server, no frameworks, just matrix math</p>
+
+<div class="controls">
+  <div class="slider-group">
+    <label for="temp">Temperature:</label>
+    <input type="range" id="temp" min="0.3" max="1.5" step="0.05" value="0.8">
+    <span class="temp-val" id="temp-val">0.80</span>
+  </div>
+  <button id="gen-btn" disabled>Loading weights...</button>
+</div>
+
+<div class="columns">
+  <div class="column">
+    <h2>Greek</h2>
+    <ul id="list-greek"></ul>
+  </div>
+  <div class="column">
+    <h2>Norse</h2>
+    <ul id="list-norse"></ul>
+  </div>
+  <div class="column">
+    <h2>Celtic</h2>
+    <ul id="list-celtic"></ul>
+  </div>
+</div>
+
+<p class="loading" id="status">Loading weights...</p>
+
+<script>
+// ── Matrix utilities ──────────────────────────────────────────────
+
+function matmul(A, B) {
+  const rows = A.length, inner = B.length, cols = B[0].length;
+  const C = Array.from({ length: rows }, () => new Float64Array(cols));
+  for (let i = 0; i < rows; i++)
+    for (let k = 0; k < inner; k++)
+      for (let j = 0; j < cols; j++)
+        C[i][j] += A[i][k] * B[k][j];
+  return C;
+}
+
+function matadd(A, B) {
+  return A.map((row, i) => row.map((v, j) => v + B[i][j]));
+}
+
+function tanh(M) {
+  return M.map(row => row.map(v => Math.tanh(v)));
+}
+
+function softmax(logits, temperature) {
+  const scaled = logits.map(row => row.map(v => v / temperature));
+  let max = -Infinity;
+  for (const row of scaled) for (const v of row) if (v > max) max = v;
+  const exps = scaled.map(row => row.map(v => Math.exp(v - max)));
+  let sum = 0;
+  for (const row of exps) for (const v of row) sum += v;
+  return exps.map(row => row.map(v => v / sum));
+}
+
+// ── Sampling ──────────────────────────────────────────────────────
+
+function sample(model, vocab, temperature) {
+  const { char_to_ix, ix_to_char, vocab_size } = vocab;
+  const hiddenSize = model.W_hh.length;
+
+  // Zero hidden state — column vector as [hiddenSize][1]
+  let h = Array.from({ length: hiddenSize }, () => [0]);
+
+  let ix = char_to_ix['^'];
+  const chars = [];
+  const maxLen = 20;
+
+  for (let step = 0; step < maxLen; step++) {
+    // One-hot column vector
+    const x = Array.from({ length: vocab_size }, (_, i) => [i === ix ? 1 : 0]);
+
+    // h = tanh(W_xh @ x + W_hh @ h + b_h)
+    h = tanh(matadd(matadd(matmul(model.W_xh, x), matmul(model.W_hh, h)), model.b_h));
+
+    // y = W_hy @ h + b_y
+    const y = matadd(matmul(model.W_hy, h), model.b_y);
+
+    // Softmax with temperature
+    const p = softmax(y, temperature);
+
+    // Sample from distribution
+    const r = Math.random();
+    let cum = 0;
+    ix = 0;
+    for (let i = 0; i < vocab_size; i++) {
+      cum += p[i][0];
+      if (r < cum) { ix = i; break; }
+    }
+
+    const ch = ix_to_char[String(ix)];
+    if (ch === '$') break;
+    chars.push(ch);
+  }
+
+  // Title-case
+  if (chars.length === 0) return '';
+  return chars[0].toUpperCase() + chars.slice(1).join('');
+}
+
+// ── App ───────────────────────────────────────────────────────────
+
+let weights = null;
+const categories = ['greek', 'norse', 'celtic'];
+
+const tempSlider = document.getElementById('temp');
+const tempVal = document.getElementById('temp-val');
+const genBtn = document.getElementById('gen-btn');
+const status = document.getElementById('status');
+
+tempSlider.addEventListener('input', () => {
+  tempVal.textContent = parseFloat(tempSlider.value).toFixed(2);
+});
+
+function clearChildren(el) {
+  while (el.firstChild) el.removeChild(el.firstChild);
+}
+
+function generate() {
+  const temperature = parseFloat(tempSlider.value);
+  for (const cat of categories) {
+    const ul = document.getElementById('list-' + cat);
+    clearChildren(ul);
+    for (let i = 0; i < 8; i++) {
+      const name = sample(weights.models[cat], weights.vocab, temperature);
+      if (name) {
+        const li = document.createElement('li');
+        li.textContent = name;
+        ul.appendChild(li);
+      }
+    }
+  }
+}
+
+genBtn.addEventListener('click', generate);
+
+// Load weights
+fetch('rnn_weights.json')
+  .then(r => r.json())
+  .then(data => {
+    weights = data;
+    genBtn.disabled = false;
+    genBtn.textContent = 'Generate';
+    status.textContent = 'Loaded: ' + data.vocab.vocab_size + ' vocab, ' +
+      data.hidden_size + ' hidden, ' + categories.length + ' models';
+    generate();
+  })
+  .catch(err => {
+    status.textContent = 'Failed to load weights: ' + err.message;
+  });
+</script>
+</body>
+</html>
