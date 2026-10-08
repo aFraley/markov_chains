@@ -17,44 +17,31 @@ HOW THIS COMPARES TO THE JS VERSION:
 -------------------------------------
 This is a 1:1 port of the JavaScript implementation. The algorithm is identical:
   1. Build a chain by counting character transitions from training names
-  2. Scale counts with a power function (like "temperature" in neural nets)
+  2. Scale counts with a power function (a "temperature" knob)
   3. Generate names by weighted random sampling from the chain
 
 Python dicts behave like JS objects here — both are hash maps under the hood.
 The main difference is Python gives us defaultdict, random.choices, and other
 niceties that make the code more concise.
 
-THE LEARNING PATH FROM HERE:
------------------------------
-  Markov Chain (this file)
+THE EVOLUTION FROM HERE:
+------------------------
+  Order-1 Markov Chain (this file)
     -> You're manually building a transition table from data
-    -> Limited to fixed-order context (order-1 here: last 1 char)
-    -> No "learning" — just counting
+    -> Context is the last 1 char only
+    -> No "learning" in the gradient sense: just counting
 
-  Higher-Order Markov (order-2, order-3, ...)
+  Higher-Order Markov (name_generator_higher_order.py)
     -> Use last N chars as context instead of just 1
-    -> Better results but state space explodes: 26^N possible states
-    -> Still just a lookup table, not true learning
+    -> Better results, but the state space explodes: 26^N possible contexts
+    -> Unseen contexts handled by BACKOFF to shorter contexts
 
-  RNN (Recurrent Neural Network)
-    -> Replaces the lookup table with a neural network
-    -> Learns a "hidden state" that encodes variable-length context
-    -> Can capture patterns like "names ending in -eus tend to be Greek"
-    -> Trained with backpropagation through time (BPTT)
+  Smoothed n-gram models (Katz 1987, Kneser-Ney 1995)
+    -> Principled ways to share probability mass with unseen contexts
+    -> The state of the art in language modeling until ~2010
 
-  LSTM / GRU
-    -> RNN variants that solve the "vanishing gradient" problem
-    -> Can remember patterns across longer sequences
-    -> The practical sweet spot for character-level generation
-
-  Transformer
-    -> Attention mechanism looks at ALL prior characters simultaneously
-    -> No sequential bottleneck — massively parallelizable
-    -> Powers GPT, Claude, etc. (but overkill for name generation)
-
-Each step adds more capacity to capture patterns, but also needs more data
-and compute. This Markov chain is the perfect starting point to understand
-the fundamentals before scaling up.
+Every step is still a fixed window of the last N symbols. What comes after
+that window (RNNs, LSTMs, transformers) lives in ../machine_learning.
 =============================================================================
 """
 
@@ -323,7 +310,7 @@ def _scale(chain: dict) -> dict:
         count=10 -> floor(10^1.3) = 19  (common patterns get boosted)
         count=2  -> floor(2^1.3)  = 2   (rare patterns stay low)
 
-    This is conceptually identical to "temperature" in neural network generation:
+    This works like a "temperature" knob on the sampling distribution:
         - Power > 1.0 (like temperature < 1): more conservative, predictable
         - Power = 1.0 (like temperature = 1): faithful to training distribution
         - Power < 1.0 (like temperature > 1): more random, creative
@@ -371,10 +358,9 @@ def markov_name(chain: dict) -> str:
         3. Use that token as the new state
         4. Repeat until done
 
-    In an RNN, step 2 would be: feed the current char into the network,
-    get a probability distribution over all possible next chars, sample one.
     Here, step 2 is: look up the current char in our table, sample from its
-    recorded transitions. Same loop, different "brain."
+    recorded transitions. Every later sequence model keeps this same loop and
+    only swaps out the table.
 
     Args:
         chain: A scaled Markov chain built by construct_chain().
@@ -405,16 +391,13 @@ def markov_name(chain: dict) -> str:
         # KEY LIMITATION: We only look at the LAST character (order-1).
         # An order-2 chain would look at the last TWO characters, capturing
         # patterns like "th" -> likely followed by "e", "o", "a", "i".
-        # An RNN would effectively look at ALL prior characters through its
-        # hidden state, learning patterns like "names starting with 'Th' tend
-        # to be longer and end in consonants."
         while len(name) < target_len:
             c = _select(chain, last_c)
 
             # Dead end: this character never appeared before another character
             # in training. It only ever appeared at the END of names.
-            # RNNs don't have this problem — they always produce a full
-            # distribution over the vocabulary, including an <END> token.
+            # Higher-order chains hit this more often; see backoff in
+            # name_generator_higher_order.py.
             if c is None:
                 break
 
@@ -543,27 +526,29 @@ def demo():
     print("This order-1 chain only remembers the LAST character.")
     print("To capture more context, you could:")
     print("  1. Increase the order (bigrams -> trigrams -> n-grams)")
-    print("  2. Use an RNN/LSTM that learns to carry hidden state")
-    print("  3. Use a Transformer with attention over all prior chars")
-    print("Each step up captures longer-range patterns in names.\n")
+    print("  2. Back off to shorter contexts when a long one was never seen")
+    print("Run name_generator_higher_order.py to see both.\n")
 
 
 def export_markov_chains(path: str = "markov_chains.json") -> None:
     """
-    Export order-1 and order-3 Markov chains for all categories to JSON.
+    Export Markov chains of orders 1-4 for all categories to JSON.
 
-    Builds chains using construct_chain() from this module (order-1) and
-    from name_generator_higher_order (order-3), then writes them to a
-    single JSON file for the browser-based comparison page.
+    Order-1 comes from construct_chain() in this module; orders 2-4 come
+    from name_generator_higher_order. The browser page (index.html) loads
+    this file to generate names client-side. The training names are included
+    so the page can measure how often each order copies one verbatim.
     """
     import json
     import name_generator_higher_order as ho
 
-    data = {"order1": {}, "order3": {}}
+    data = {f"order{o}": {} for o in range(1, 5)}
+    data["names"] = {k: list(v) for k, v in NAME_SETS.items()}
 
     for name_type, name_list in NAME_SETS.items():
         data["order1"][name_type] = construct_chain(list(name_list))
-        data["order3"][name_type] = ho.construct_chain(list(name_list), 3)
+        for o in range(2, 5):
+            data[f"order{o}"][name_type] = ho.construct_chain(list(name_list), o)
 
     with open(path, "w") as f:
         json.dump(data, f)

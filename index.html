@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>From Counting Letters to Modern AI</title>
+<title>Markov Chains and Their Evolution</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -14,2020 +14,617 @@
     line-height: 1.7;
   }
 
+  a { color: #e94560; }
+
   /* ── Hero ─────────────────────────────────────────────────── */
 
   .hero {
     text-align: center;
-    padding: 5rem 2rem 4rem;
+    padding: 5rem 1rem 4rem;
     background: linear-gradient(180deg, #16213e 0%, #1a1a2e 100%);
   }
 
-  .hero h1 {
-    font-size: 2.2rem;
-    color: #e94560;
-    margin-bottom: 0.6rem;
-  }
+  .hero h1 { font-size: 2.1rem; color: #e94560; margin-bottom: 0.6rem; }
 
   .hero .tagline {
     color: #888;
     font-size: 0.95rem;
-    max-width: 620px;
+    max-width: 640px;
     margin: 0 auto 2.5rem;
   }
 
-  .hero .progression {
+  .progression {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     flex-wrap: wrap;
-    font-size: 0.85rem;
-  }
-
-  .hero .progression .step {
-    background: #16213e;
-    border: 1px solid #333;
-    padding: 0.35rem 0.8rem;
-    border-radius: 4px;
-    color: #aaa;
-    transition: all 0.2s;
-  }
-
-  .hero .progression .step.active {
-    border-color: #e94560;
-    color: #e94560;
-    background: rgba(233, 69, 96, 0.08);
-  }
-
-  .hero .progression .arrow {
-    color: #555;
     font-size: 0.8rem;
   }
 
-  /* ── Main content ─────────────────────────────────────────── */
-
-  .content {
-    max-width: 820px;
-    margin: 0 auto;
-    padding: 0 2rem 4rem;
+  .progression a {
+    border: 1px solid #e94560;
+    color: #e94560;
+    background: rgba(233, 69, 96, 0.08);
+    padding: 0.3rem 0.7rem;
+    border-radius: 4px;
+    text-decoration: none;
   }
 
-  /* ── Timeline ─────────────────────────────────────────────── */
+  .progression .arrow { color: #555; }
 
-  .timeline {
-    position: relative;
-    padding-left: 2.5rem;
-  }
+  /* ── Layout ───────────────────────────────────────────────── */
 
-  .timeline::before {
-    content: '';
-    position: absolute;
-    left: 0.5rem;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: linear-gradient(180deg, #e94560 0%, #0f3460 50%, #16213e 100%);
-  }
+  .content { max-width: 820px; margin: 0 auto; padding: 0 1rem 5rem; }
+
+  .divider { text-align: center; color: #333; margin: 3rem 0; letter-spacing: 0.5em; }
+
+  h2.section { color: #e94560; font-size: 1.1rem; margin-bottom: 0.8rem; }
 
   .stage {
+    border-left: 2px solid #333;
+    padding: 0 0 2.5rem 1.5rem;
     position: relative;
-    margin-bottom: 4rem;
   }
 
   .stage::before {
     content: '';
     position: absolute;
-    left: -2.15rem;
-    top: 0.6rem;
-    width: 12px;
-    height: 12px;
+    left: -6px; top: 0.45rem;
+    width: 10px; height: 10px;
     border-radius: 50%;
     background: #e94560;
-    border: 2px solid #1a1a2e;
   }
 
-  .stage .year {
-    font-size: 0.75rem;
-    color: #e94560;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-bottom: 0.2rem;
-  }
+  .stage .year { color: #e94560; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .stage h2 { color: #eee; font-size: 1.15rem; margin: 0.2rem 0 0.6rem; }
+  .stage h2 .file { color: #666; font-size: 0.75rem; font-weight: normal; margin-left: 0.5rem; }
 
-  .stage h2 {
-    color: #e0e0e0;
-    font-size: 1.35rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .stage h2 .file {
-    font-size: 0.8rem;
-    color: #666;
-    font-weight: normal;
-  }
-
-  .stage .desc {
-    color: #aaa;
-    margin-bottom: 1.2rem;
-    font-size: 0.9rem;
-  }
-
-  /* ── Equation blocks ──────────────────────────────────────── */
+  .desc { color: #bbb; font-size: 0.88rem; margin-bottom: 1rem; }
 
   .eq-block {
-    background: #0f3460;
-    border: 1px solid #1a4a7a;
+    background: #0f1626;
+    border: 1px solid #2a2a40;
     border-radius: 6px;
-    padding: 1rem 1.2rem;
+    padding: 0.9rem 1rem;
     margin: 1rem 0;
     overflow-x: auto;
   }
 
-  .eq-block .eq-label {
-    font-size: 0.7rem;
-    color: #e94560;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 0.5rem;
-  }
+  .eq-block .eq-label { color: #666; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 0.4rem; }
+  .eq-block code { white-space: pre; color: #9fd3c7; font-size: 0.8rem; }
+  .eq-block .comment { color: #555; }
 
-  .eq-block code {
-    display: block;
+  .insight, .limitation {
     font-size: 0.82rem;
-    line-height: 1.8;
-    color: #e0e0e0;
-    white-space: pre;
+    padding: 0.7rem 1rem;
+    border-radius: 4px;
+    margin: 0.8rem 0;
   }
 
-  .eq-block code .comment {
-    color: #5a7a9a;
-  }
+  .insight    { background: rgba(80, 200, 160, 0.06); border-left: 3px solid #50c8a0; color: #b8d8cc; }
+  .limitation { background: rgba(233, 69, 96, 0.06); border-left: 3px solid #e94560; color: #d8b8c0; }
 
-  .eq-block code .highlight {
-    color: #e94560;
-    font-weight: bold;
-  }
-
-  /* ── Insight callouts ─────────────────────────────────────── */
-
-  .insight {
-    border-left: 3px solid #e94560;
-    padding: 0.6rem 1rem;
-    margin: 1rem 0;
-    background: rgba(233, 69, 96, 0.05);
-    font-size: 0.85rem;
-    color: #ccc;
-  }
-
-  .insight strong {
-    color: #e94560;
-  }
-
-  /* ── Limitation callouts ──────────────────────────────────── */
-
-  .limitation {
-    border-left: 3px solid #555;
-    padding: 0.6rem 1rem;
-    margin: 1rem 0;
-    font-size: 0.85rem;
-    color: #999;
-  }
-
-  .limitation strong {
-    color: #aaa;
-  }
-
-  /* ── Comparison table ─────────────────────────────────────── */
-
-  .compare-table {
+  table {
     width: 100%;
     border-collapse: collapse;
-    margin: 1.5rem 0;
-    font-size: 0.82rem;
-  }
-
-  .compare-table th {
-    text-align: left;
-    color: #e94560;
-    padding: 0.5rem 0.8rem;
-    border-bottom: 1px solid #333;
-    font-weight: bold;
-  }
-
-  .compare-table td {
-    padding: 0.45rem 0.8rem;
-    border-bottom: 1px solid #222;
-    color: #bbb;
-  }
-
-  .compare-table tr:last-child td {
-    border-bottom: none;
-  }
-
-  .compare-table .num {
-    color: #e94560;
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* ── Architecture diagrams (CSS only) ─────────────────────── */
-
-  .diagram {
-    margin: 1.5rem 0;
-    padding: 1.2rem;
-    background: #16213e;
-    border: 1px solid #222;
-    border-radius: 6px;
-    overflow-x: auto;
-  }
-
-  .diagram .label {
-    font-size: 0.7rem;
-    color: #e94560;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 0.8rem;
-  }
-
-  .flow {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    flex-wrap: wrap;
-    font-size: 0.78rem;
-  }
-
-  .flow .box {
-    border: 1px solid #444;
-    padding: 0.3rem 0.6rem;
-    border-radius: 3px;
-    color: #ccc;
-    white-space: nowrap;
-  }
-
-  .flow .box.accent {
-    border-color: #e94560;
-    color: #e94560;
-  }
-
-  .flow .box.key {
-    border-color: #e94560;
-    background: rgba(233, 69, 96, 0.12);
-    color: #e94560;
-  }
-
-  .flow .arr { color: #555; }
-
-  /* ── Attention grid ───────────────────────────────────────── */
-
-  .attn-grid {
-    display: inline-block;
-    margin: 0.5rem 0;
-    font-size: 0.72rem;
-    line-height: 1;
-  }
-
-  .attn-grid .row {
-    display: flex;
-    align-items: center;
-  }
-
-  .attn-grid .ch {
-    width: 2em;
-    text-align: center;
-    color: #888;
-    padding: 0.25rem 0;
-  }
-
-  .attn-grid .cell {
-    width: 2em;
-    height: 1.8em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 2px;
-  }
-
-  /* ── Links / demos ────────────────────────────────────────── */
-
-  .demo-links {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    margin-top: 1.5rem;
-  }
-
-  .demo-links a {
-    display: inline-block;
-    color: #e94560;
-    border: 1px solid #e94560;
-    padding: 0.4rem 1rem;
-    border-radius: 4px;
-    text-decoration: none;
-    font-size: 0.85rem;
-    transition: all 0.15s;
-  }
-
-  .demo-links a:hover {
-    background: rgba(233, 69, 96, 0.12);
-  }
-
-  /* ── Section divider ──────────────────────────────────────── */
-
-  .divider {
-    text-align: center;
-    margin: 3rem 0;
-    color: #333;
     font-size: 0.8rem;
-    letter-spacing: 0.5em;
+    margin: 1rem 0;
   }
 
-  /* ── Conv grid visualization ────────────────────────────────── */
+  th, td { padding: 0.45rem 0.6rem; border-bottom: 1px solid #2a2a40; text-align: left; }
+  th { color: #888; font-weight: normal; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
 
-  .conv-demo {
+  .table-wrap { overflow-x: auto; }
+
+  /* ── Playground ───────────────────────────────────────────── */
+
+  .panel {
+    background: #16213e;
+    border: 1px solid #2a2a40;
+    border-radius: 8px;
+    padding: 1.2rem;
+    margin: 1rem 0;
+  }
+
+  .controls {
     display: flex;
-    align-items: flex-start;
-    gap: 1.5rem;
     flex-wrap: wrap;
-    margin: 0.8rem 0;
-  }
-
-  .conv-demo .grid-block {
-    display: flex;
-    flex-direction: column;
+    gap: 1rem;
     align-items: center;
-    gap: 0.3rem;
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
   }
 
-  .conv-demo .grid-block .grid-label {
-    font-size: 0.7rem;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+  select, button, input[type=text] {
+    font: inherit;
+    background: #0f1626;
+    color: #ddd;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 0.35rem 0.6rem;
   }
 
-  .pixel-grid {
+  button { border-color: #e94560; color: #e94560; cursor: pointer; }
+  button:hover { background: rgba(233, 69, 96, 0.12); }
+
+  .names {
     display: grid;
-    gap: 1px;
-    line-height: 1;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.3rem 1rem;
+    font-size: 0.9rem;
+    min-height: 6rem;
   }
 
-  .pixel-grid .px {
-    width: 1.8em;
-    height: 1.8em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    border-radius: 2px;
-  }
+  .names .copy { color: #e9a345; }
+  .names .copy::after { content: ' ⟲'; font-size: 0.75rem; }
 
-  .conv-demo .op {
-    font-size: 1.2rem;
-    color: #555;
-    align-self: center;
-    padding-top: 1rem;
-  }
+  .legend { font-size: 0.72rem; color: #777; margin-top: 0.8rem; }
 
-  /* ── Two-track diagram ────────────────────────────────────── */
+  .dist { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.78rem; margin-top: 0.6rem; }
+  .dist .row { display: flex; align-items: center; gap: 0.5rem; }
+  .dist .ch { width: 1.5rem; text-align: center; color: #eee; }
+  .dist .bar { height: 0.7rem; background: #e94560; border-radius: 2px; }
+  .dist .pct { color: #777; width: 3.5rem; }
+  .dist-note { font-size: 0.75rem; color: #888; margin-top: 0.4rem; }
 
-  .two-track {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    margin: 0.8rem 0;
-  }
+  #status { font-size: 0.75rem; color: #777; }
 
-  .two-track .track {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.78rem;
-  }
+  ul.branches { list-style: none; font-size: 0.84rem; }
+  ul.branches li { margin-bottom: 0.8rem; padding-left: 1rem; border-left: 2px solid #333; }
+  ul.branches strong { color: #e94560; }
 
-  .two-track .track-label {
-    width: 5em;
-    text-align: right;
-    font-size: 0.7rem;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  /* ── Footer ───────────────────────────────────────────────── */
-
-  .footer {
-    text-align: center;
-    padding: 3rem 2rem;
-    color: #555;
-    font-size: 0.78rem;
-    border-top: 1px solid #222;
-  }
-
-  .footer a { color: #888; }
-
-  /* ── Responsive ───────────────────────────────────────────── */
-
-  @media (max-width: 640px) {
-    .hero { padding: 3rem 1rem 2rem; }
-    .hero h1 { font-size: 1.6rem; }
-    .content { padding: 0 1rem 3rem; }
-    .timeline { padding-left: 2rem; }
-    .compare-table { font-size: 0.75rem; }
-    .eq-block code { font-size: 0.75rem; }
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 1.5rem; }
+    .stage { padding-left: 1rem; }
   }
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- HERO                                                           -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
-
 <div class="hero">
-  <h1>From Counting Letters to Modern AI</h1>
+  <h1>Markov Chains and Their Evolution</h1>
   <p class="tagline">
-    A hands-on tour through a century of ideas in machine learning &mdash;
-    starting with a simple name generator built from scratch with NumPy,
-    and tracing the same math all the way to modern AI.
+    One assumption: the next symbol depends only on the last few.
+    From Markov counting letters in Pushkin by hand, through Shannon's
+    approximations of English, to the n-gram language models that ran
+    speech recognition and machine translation for decades.
   </p>
   <div class="progression">
-    <span class="step active" id="nav-markov">Markov</span>
+    <a href="#markov">1913 Markov</a>
     <span class="arrow">&rarr;</span>
-    <span class="step active" id="nav-higher">Higher-Order</span>
+    <a href="#shannon">1948 Shannon</a>
     <span class="arrow">&rarr;</span>
-    <span class="step active" id="nav-rnn">RNN</span>
+    <a href="#order1">Order-1</a>
     <span class="arrow">&rarr;</span>
-    <span class="step active" id="nav-lstm">LSTM</span>
+    <a href="#orderN">Order-N + backoff</a>
     <span class="arrow">&rarr;</span>
-    <span class="step active" id="nav-transformer">Transformer</span>
+    <a href="#smoothing">Smoothing</a>
     <span class="arrow">&rarr;</span>
-    <span class="arrow">|</span>
-    <span class="step active" id="nav-cnn">CNNs</span>
-    <span class="arrow">&rarr;</span>
-    <span class="step active" id="nav-apps">Applications</span>
-    <span class="arrow">&rarr;</span>
-    <span class="step active" id="nav-landscape">LLMs</span>
-    <span class="arrow">&rarr;</span>
-    <span class="step active" id="nav-realworld">Real World</span>
+    <a href="#wall">The wall</a>
   </div>
 </div>
-
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- CONTENT                                                        -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
 
 <div class="content">
 
   <div class="divider">- - -</div>
 
-  <div class="timeline">
+  <!-- ── Stage: Markov ─────────────────────────────────────────── -->
 
-    <!-- ── Stage 1: Markov ─────────────────────────────────────── -->
+  <div class="stage" id="markov">
+    <div class="year">1906 &middot; 1913</div>
+    <h2>A. A. Markov: dependence you can count</h2>
+    <p class="desc">
+      In 1906 Markov introduced chains of dependent events to show that the
+      law of large numbers does not require independence. In 1913 he put the
+      idea to work on real text: he took the first 20,000 letters of
+      Pushkin's <em>Eugene Onegin</em>, classified each as vowel or consonant,
+      and counted what followed what.
+    </p>
 
-    <div class="stage" id="markov">
-      <div class="year">Step 1 &middot; 1906</div>
-      <h2>Order-1 Markov Chain <span class="file">name_generator.py</span></h2>
-      <p class="desc">
-        The simplest possible approach: count how often each letter follows
-        each other letter in the training data, then sample from those
-        frequencies. Given the current character, pick the next one.
-      </p>
-
-      <div class="diagram">
-        <div class="label">How it works</div>
-        <div class="flow">
-          <span class="box">current char</span>
-          <span class="arr">&rarr;</span>
-          <span class="box accent">lookup table</span>
-          <span class="arr">&rarr;</span>
-          <span class="box">P(next char)</span>
-          <span class="arr">&rarr;</span>
-          <span class="box">sample</span>
-        </div>
-      </div>
-
-      <div class="eq-block">
-        <div class="eq-label">The whole algorithm</div>
-        <code>P(next_char | current_char) = count(current &rarr; next) / count(current &rarr; anything)</code>
-      </div>
-
-      <div class="insight">
-        <strong>What it teaches:</strong> You can generate surprisingly plausible
-        text with nothing but character-pair statistics. No neural networks, no
-        gradients, no training loops. Just counting.
-      </div>
-
-      <div class="limitation">
-        <strong>The limitation:</strong> No memory beyond the current character.
-        After generating "th", it sees only "h" and has no idea "t" preceded it.
-        Names lack structure beyond local letter patterns.
-      </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Current letter</th><th>P(next is vowel)</th><th>P(next is consonant)</th></tr></thead>
+        <tbody>
+          <tr><td>vowel</td><td class="num">0.128</td><td class="num">0.872</td></tr>
+          <tr><td>consonant</td><td class="num">0.663</td><td class="num">0.337</td></tr>
+        </tbody>
+      </table>
     </div>
 
-    <!-- ── Stage 2: Higher-Order Markov ────────────────────────── -->
+    <div class="insight">
+      <strong>What it shows:</strong> If letters were independent, both rows
+      would be identical (vowels make up about 43% of the text). They are
+      wildly different. The current state carries real information about the
+      next one, and a two-row table captures it.
+    </div>
+  </div>
 
-    <div class="stage" id="higher-order">
-      <div class="year">Step 2 &middot; Extension</div>
-      <h2>Higher-Order Markov <span class="file">name_generator_higher_order.py</span></h2>
-      <p class="desc">
-        Instead of looking at just the last 1 character, look at the last N
-        characters. Order-3 means "given the last 3 characters, what comes
-        next?" This dramatically improves quality — but creates a new problem.
-      </p>
+  <!-- ── Stage: Shannon ────────────────────────────────────────── -->
 
-      <div class="diagram">
-        <div class="label">How it works (with backoff)</div>
-        <div class="flow">
-          <span class="box">last N chars</span>
-          <span class="arr">&rarr;</span>
-          <span class="box accent">lookup table</span>
-          <span class="arr">&rarr;</span>
-          <span class="box">found?</span>
-          <span class="arr">&rarr;</span>
-          <span class="box">yes: sample</span>
-        </div>
-        <div class="flow" style="margin-top: 0.4rem; margin-left: 16.5em;">
-          <span class="arr">&darr;</span>
-          <span class="box">no: try N-1 chars</span>
-          <span class="arr">&rarr;</span>
-          <span class="box">... down to order-1</span>
-        </div>
-      </div>
+  <div class="stage" id="shannon">
+    <div class="year">1948</div>
+    <h2>Claude Shannon: Markov chains as models of language</h2>
+    <p class="desc">
+      In <em>A Mathematical Theory of Communication</em>, Shannon generated
+      a series of "approximations to English": random letters, then letters
+      drawn with the right frequencies, then letters conditioned on the
+      previous one, then on the previous two, then the same trick at the
+      word level. Each step reads more like English. He was doing what this
+      project does, with a book and a table of random numbers instead of a
+      computer.
+    </p>
 
-      <div class="eq-block">
-        <div class="eq-label">The backoff strategy</div>
-        <code><span class="comment">// Try "xqz" first, if never seen, try "qz", then "z"</span>
-for order in [3, 2, 1]:
-    context = name[-order:]
+    <div class="eq-block">
+      <div class="eq-label">Shannon's ladder</div>
+      <code>order-0   P(c)                     <span class="comment"># letter frequencies only</span>
+order-1   P(c | c₋₁)               <span class="comment"># digrams: Markov's table, all 26 letters</span>
+order-2   P(c | c₋₂ c₋₁)           <span class="comment"># trigrams</span>
+order-n   P(c | c₋ₙ ... c₋₁)       <span class="comment"># n-grams</span></code>
+    </div>
+
+    <div class="insight">
+      <strong>What it adds:</strong> A Markov chain is not just a way to
+      describe text, it is a way to <em>generate</em> it, and the order is a
+      dial between gibberish and plausibility. Shannon also used these models
+      to estimate the entropy of English, which is where "language model"
+      as a measurable thing begins.
+    </div>
+  </div>
+
+  <!-- ── Stage: Order-1 ────────────────────────────────────────── -->
+
+  <div class="stage" id="order1">
+    <div class="year">Step 1 &middot; this repo</div>
+    <h2>Order-1 character chain <span class="file">name_generator.py</span></h2>
+    <p class="desc">
+      Markov's table with all the letters filled in. Count how often each
+      letter follows each other letter in a set of mythology names, then
+      walk the table: pick a start letter, sample the next from its row,
+      repeat. Name length and first letter get their own distributions.
+    </p>
+
+    <div class="eq-block">
+      <div class="eq-label">The whole algorithm</div>
+      <code>P(next | current) = count(current &rarr; next) / count(current &rarr; anything)</code>
+    </div>
+
+    <div class="eq-block">
+      <div class="eq-label">One knob: power scaling</div>
+      <code>weight = floor(count ** 1.3)   <span class="comment"># &gt;1 sharpens, &lt;1 flattens (a temperature)</span></code>
+    </div>
+
+    <div class="limitation">
+      <strong>The limitation:</strong> after generating "th", the chain sees
+      only "h". Output has the right letters in plausible pairs and little
+      else.
+    </div>
+  </div>
+
+  <!-- ── Stage: Order-N ────────────────────────────────────────── -->
+
+  <div class="stage" id="orderN">
+    <div class="year">Step 2 &middot; this repo</div>
+    <h2>Order-N with backoff <span class="file">name_generator_higher_order.py</span></h2>
+    <p class="desc">
+      Use the last N characters as the state. Quality jumps immediately,
+      and two new problems show up at once. Most long contexts never occur
+      in the training data, so the chain needs a fallback. And the contexts
+      that do occur are so specific that the chain starts reciting its
+      training set.
+    </p>
+
+    <div class="eq-block">
+      <div class="eq-label">Backoff: if the long context was never seen, shorten it</div>
+      <code>for o in range(order, 0, -1):
+    context = name[-o:]
     if context in chain:
         return sample(chain[context])</code>
-      </div>
-
-      <div class="insight">
-        <strong>What it teaches:</strong> More context = better predictions.
-        "thr" almost always leads to vowels. But this comes at a steep cost.
-      </div>
-
-      <div class="limitation">
-        <strong>The limitation:</strong> The state space explodes — 26<sup>N</sup>
-        possible contexts. With only ~44 training names, most 3-character
-        contexts are never seen. And even order-3 has no memory of the
-        beginning of the name when generating the end. Still just counting,
-        no generalization.
-      </div>
     </div>
 
-    <!-- ── Stage 3: RNN ────────────────────────────────────────── -->
-
-    <div class="stage" id="rnn">
-      <div class="year">Step 3 &middot; 1986</div>
-      <h2>Recurrent Neural Network <span class="file">rnn_name_generator.py</span></h2>
-      <p class="desc">
-        Replace the lookup table with a neural network that learns a "hidden
-        state" — a compressed summary of everything it has seen so far in the
-        sequence. Even for character sequences never seen in training, the
-        network produces reasonable predictions based on similar patterns.
-      </p>
-
-      <div class="diagram">
-        <div class="label">The recurrence — hidden state feeds back into itself</div>
-        <div class="flow">
-          <span class="box">x<sub>t</sub></span>
-          <span class="arr">&rarr;</span>
-          <span class="box key">h<sub>t</sub> = tanh(W<sub>xh</sub>x + W<sub>hh</sub>h<sub>t-1</sub> + b)</span>
-          <span class="arr">&rarr;</span>
-          <span class="box accent">W<sub>hy</sub>h + b</span>
-          <span class="arr">&rarr;</span>
-          <span class="box">softmax</span>
-          <span class="arr">&rarr;</span>
-          <span class="box">P(next)</span>
-        </div>
-        <div style="font-size: 0.72rem; color: #555; margin-top: 0.3rem; margin-left: 6.5em;">
-          &uarr;&mdash;&mdash;&mdash;&mdash;&mdash; recurrence &mdash;&mdash;&mdash;&mdash;&mdash;&rdsh;
-        </div>
-      </div>
-
-      <div class="eq-block">
-        <div class="eq-label">The RNN — three lines of math</div>
-        <code>h = tanh(W_xh @ x + W_hh @ h + b_h)   <span class="comment"># update hidden state</span>
-y = W_hy @ h + b_y                     <span class="comment"># output logits</span>
-p = softmax(y)                         <span class="comment"># probabilities</span></code>
-      </div>
-
-      <div class="insight">
-        <strong>What it teaches:</strong> A hidden state can compress
-        an arbitrary-length history into a fixed-size vector. The network
-        learns what to remember, not us. Trained with backpropagation
-        through time (BPTT) — unrolling the recurrence and computing
-        gradients all the way back.
-      </div>
-
-      <div class="limitation">
-        <strong>The limitation — vanishing gradients:</strong> When computing
-        gradients, the chain rule multiplies through W<sub>hh</sub> at every
-        timestep. After 5-10 steps, gradients shrink exponentially toward zero.
-        The network "forgets" the beginning of longer names.
-      </div>
-
-      <div class="demo-links">
-        <a href="rnn_demo.html">RNN demo</a>
-        <a href="lstm_demo.html">LSTM demo</a>
-        <a href="transformer_demo.html">Transformer demo</a>
-        <a href="name_compare.html">All 5 methods compared</a>
-      </div>
+    <div class="limitation">
+      <strong>The limitation:</strong> there are 26<sup>N</sup> possible
+      contexts and a few hundred training names. Raise N and you trade
+      gibberish for memorization. Try it below: the copy rate climbs with
+      every order.
     </div>
+  </div>
 
-    <!-- ── Stage 4: LSTM ───────────────────────────────────────── -->
+  <!-- ── Playground ────────────────────────────────────────────── -->
 
-    <div class="stage" id="lstm">
-      <div class="year">Step 4 &middot; 1997</div>
-      <h2>Long Short-Term Memory <span class="file">lstm_name_generator.py</span></h2>
-      <p class="desc">
-        The LSTM adds a cell state that flows through time with additive
-        updates instead of multiplicative ones. Three gates learn what to
-        forget, what to store, and what to output. Gradients flow through
-        the cell state without vanishing.
-      </p>
+  <h2 class="section" id="playground">Playground</h2>
+  <p class="desc">
+    The same chains the Python code builds, exported to
+    <code>markov_chains.json</code> and sampled in your browser.
+  </p>
 
-      <div class="diagram">
-        <div class="label">The cell state — the key difference from RNN</div>
-        <div class="flow">
-          <span class="box">c<sub>t-1</sub></span>
-          <span class="arr">&rarr;</span>
-          <span class="box">&times; f<sub>t</sub></span>
-          <span class="arr">&rarr;</span>
-          <span class="box key">+ i<sub>t</sub> &times; g<sub>t</sub></span>
-          <span class="arr">&rarr;</span>
-          <span class="box">c<sub>t</sub></span>
-        </div>
-        <div style="font-size: 0.72rem; color: #888; margin-top: 0.3rem; padding-left: 1rem;">
-          forget gate controls erasure &middot; input gate controls writing &middot; additive, not multiplicative
-        </div>
-      </div>
-
-      <div class="eq-block">
-        <div class="eq-label">The LSTM — four gates, eight lines</div>
-        <code>f = sigmoid(W_xf @ x + W_hf @ h + b_f)   <span class="comment"># forget gate</span>
-i = sigmoid(W_xi @ x + W_hi @ h + b_i)   <span class="comment"># input gate</span>
-g = tanh(W_xg @ x + W_hg @ h + b_g)      <span class="comment"># candidate values</span>
-<span class="highlight">c = f * c_prev + i * g</span>                    <span class="comment"># cell state (THE KEY)</span>
-o = sigmoid(W_xo @ x + W_ho @ h + b_o)   <span class="comment"># output gate</span>
-h = o * tanh(c)                            <span class="comment"># hidden state</span>
-y = W_hy @ h + b_y                        <span class="comment"># logits</span>
-p = softmax(y)                             <span class="comment"># probabilities</span></code>
-      </div>
-
-      <div class="insight">
-        <strong>Why gradients don't vanish:</strong> During backprop, the gradient
-        through the cell state is dc<sub>t-1</sub> = dc<sub>t</sub> &times; f<sub>t</sub>.
-        The forget gate f<sub>t</sub> is a learned value near 0 or 1 — not a
-        matrix multiplication. No exponential shrinking. The cell state acts as a
-        "gradient highway."
-      </div>
-
-      <div class="limitation">
-        <strong>The limitation — still sequential:</strong> Characters must be
-        processed one at a time, left to right. The 8th character can't be
-        computed until characters 1-7 are done. And information from the start
-        of the name still has to survive through every intermediate step —
-        the highway helps, but it's still a chain.
-      </div>
-
-      <div class="demo-links">
-        <a href="lstm_demo.html">LSTM live demo</a>
-      </div>
+  <div class="panel">
+    <div class="controls">
+      <label>Tradition
+        <select id="cat">
+          <option value="greek">Greek</option>
+          <option value="norse">Norse</option>
+          <option value="celtic">Celtic</option>
+        </select>
+      </label>
+      <label>Order <input type="range" id="order" min="1" max="4" value="2"> <span id="order-val">2</span></label>
+      <button id="gen">Generate</button>
+      <span id="status">Loading chains&hellip;</span>
     </div>
+    <div class="names" id="names"></div>
+    <div class="legend"><span style="color:#e9a345">⟲ orange</span> = an exact copy of a training name.</div>
+  </div>
 
-    <!-- ── Stage 5: Transformer ────────────────────────────────── -->
-
-    <div class="stage" id="transformer">
-      <div class="year">Step 5 &middot; 2017</div>
-      <h2>Transformer <span class="file">transformer_name_generator.py</span></h2>
-      <p class="desc">
-        Drop recurrence entirely. Instead of passing information through a chain
-        of hidden states, let every position attend directly to every earlier
-        position through learned attention weights. The 8th character can look
-        straight back at the 1st character — no intermediaries, no bottleneck.
-      </p>
-
-      <div class="diagram">
-        <div class="label">Self-attention — every position attends to all previous positions</div>
-        <div class="flow">
-          <span class="box">all chars</span>
-          <span class="arr">&rarr;</span>
-          <span class="box">embed + position</span>
-          <span class="arr">&rarr;</span>
-          <span class="box key">Q, K, V</span>
-          <span class="arr">&rarr;</span>
-          <span class="box accent">attention</span>
-          <span class="arr">&rarr;</span>
-          <span class="box">FFN</span>
-          <span class="arr">&rarr;</span>
-          <span class="box">softmax</span>
-        </div>
-        <div style="font-size: 0.72rem; color: #888; margin-top: 0.3rem; padding-left: 1rem;">
-          all positions processed simultaneously &middot; no recurrence &middot; causal mask prevents looking ahead
-        </div>
-      </div>
-
-      <div class="eq-block">
-        <div class="eq-label">Scaled dot-product attention</div>
-        <code>Q = X @ W_Q + b_Q                           <span class="comment"># queries: "what am I looking for?"</span>
-K = X @ W_K + b_K                           <span class="comment"># keys: "what do I contain?"</span>
-V = X @ W_V + b_V                           <span class="comment"># values: "what do I offer?"</span>
-
-scores = <span class="highlight">(Q @ K.T) / sqrt(d_k)</span> + causal_mask  <span class="comment"># compatibility scores</span>
-attn = softmax(scores)                      <span class="comment"># attention weights</span>
-out = <span class="highlight">attn @ V</span>                               <span class="comment"># weighted combination</span></code>
-      </div>
-
-      <div class="eq-block">
-        <div class="eq-label">Full transformer block (pre-norm, GPT-2 style)</div>
-        <code>X = embed(input) + positional_encoding      <span class="comment"># (T, 32)</span>
-
-X_n = LayerNorm(X)                          <span class="comment"># normalize</span>
-X = X + MultiHeadAttention(X_n)             <span class="comment"># attend + residual</span>
-
-X_n = LayerNorm(X)                          <span class="comment"># normalize</span>
-X = X + FFN(X_n)                            <span class="comment"># feed-forward + residual</span>
-
-logits = LayerNorm(X) @ W_out + b_out       <span class="comment"># project to vocab</span></code>
-      </div>
-
-      <!-- Attention pattern visualization -->
-      <div class="diagram">
-        <div class="label">What attention learns — example pattern for "achilles"</div>
-        <div class="attn-grid" id="attn-viz">
-          <!-- Filled by JS below -->
-        </div>
-        <div style="font-size: 0.72rem; color: #666; margin-top: 0.4rem;">
-          Brighter = stronger attention. Each row shows which earlier characters
-          that position attends to. The causal mask prevents looking ahead
-          (upper triangle is zero).
-        </div>
-      </div>
-
-      <div class="insight">
-        <strong>Why this matters:</strong> Attention gives O(1) depth between
-        any two positions — the 10th character is one attention step away from
-        the 1st. In an RNN, that's 9 sequential steps. This is the architecture
-        behind GPT, Claude, and every modern large language model. Same math,
-        10<sup>6</sup>&times; larger.
-      </div>
-
-      <div class="insight">
-        <strong>The tradeoff:</strong> ~44 training names is absurdly small for a
-        transformer. We deliberately overfit to demonstrate the mechanism. In
-        practice, transformers shine with thousands to billions of examples.
-      </div>
-
-      <div class="demo-links">
-        <a href="transformer_demo.html">Transformer live demo</a>
-      </div>
+  <div class="panel">
+    <div class="controls">
+      <label>Peek inside: after <input type="text" id="ctx" value="th" size="6" maxlength="4"></label>
+      <span class="dist-note" id="ctx-note"></span>
     </div>
+    <div class="dist" id="dist"></div>
+  </div>
 
-  </div><!-- /timeline -->
-
-  <!-- ═══════════════════════════════════════════════════════════ -->
-  <!-- COMPARISON TABLE                                           -->
-  <!-- ═══════════════════════════════════════════════════════════ -->
+  <h2 class="section">What the order buys, measured</h2>
+  <p class="desc">
+    Computed live from 500 samples per order for the selected tradition.
+    "Contexts" is the number of distinct rows in the table.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Order</th><th>Contexts</th><th>Copies of training names</th><th>Example</th></tr></thead>
+      <tbody id="stats"></tbody>
+    </table>
+  </div>
 
   <div class="divider">- - -</div>
 
-  <h2 style="color: #e94560; font-size: 1.1rem; margin-bottom: 1rem;">Side-by-Side Comparison</h2>
+  <!-- ── Stage: Smoothing ──────────────────────────────────────── -->
 
-  <table class="compare-table">
-    <thead>
-      <tr>
-        <th></th>
-        <th>Markov</th>
-        <th>Higher-Order</th>
-        <th>RNN</th>
-        <th>LSTM</th>
-        <th>Transformer</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>Year</strong></td>
-        <td>1906</td>
-        <td>&mdash;</td>
-        <td>1986</td>
-        <td>1997</td>
-        <td>2017</td>
-      </tr>
-      <tr>
-        <td><strong>Memory</strong></td>
-        <td>1 char</td>
-        <td>N chars</td>
-        <td>Learned (h)</td>
-        <td>Learned (h+c)</td>
-        <td>Full sequence</td>
-      </tr>
-      <tr>
-        <td><strong>Parameters</strong></td>
-        <td class="num">~700</td>
-        <td class="num">~2,400</td>
-        <td class="num">~7,900</td>
-        <td class="num">~23,580</td>
-        <td class="num">~14,590</td>
-      </tr>
-      <tr>
-        <td><strong>Learns?</strong></td>
-        <td>No</td>
-        <td>No</td>
-        <td>Yes (BPTT)</td>
-        <td>Yes (BPTT)</td>
-        <td>Yes (backprop)</td>
-      </tr>
-      <tr>
-        <td><strong>Generalizes?</strong></td>
-        <td>No</td>
-        <td>No (backoff)</td>
-        <td>Yes</td>
-        <td>Yes</td>
-        <td>Yes</td>
-      </tr>
-      <tr>
-        <td><strong>Gradient flow</strong></td>
-        <td>&mdash;</td>
-        <td>&mdash;</td>
-        <td>Vanishes</td>
-        <td>Highway (c)</td>
-        <td>Direct (attn)</td>
-      </tr>
-      <tr>
-        <td><strong>Parallelizable?</strong></td>
-        <td>Yes</td>
-        <td>Yes</td>
-        <td>No</td>
-        <td>No</td>
-        <td>Yes</td>
-      </tr>
-      <tr>
-        <td><strong>Processes</strong></td>
-        <td>1 char</td>
-        <td>N chars</td>
-        <td>Sequential</td>
-        <td>Sequential</td>
-        <td>All at once</td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="stage" id="smoothing">
+    <div class="year">1987 &ndash; 2007</div>
+    <h2>Smoothing: the n-gram era</h2>
+    <p class="desc">
+      Step 2's backoff is the crude version. Once n-gram models became the
+      engine of speech recognition and statistical machine translation,
+      the field spent two decades on one question: how much probability
+      should an unseen context get, and where should it come from?
+      (Discussed here for context; not implemented in this repo.)
+    </p>
 
-  <!-- ═══════════════════════════════════════════════════════════ -->
-  <!-- PARAMETER GROWTH VISUALIZATION                              -->
-  <!-- ═══════════════════════════════════════════════════════════ -->
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Method</th><th>Year</th><th>Idea</th></tr></thead>
+        <tbody>
+          <tr><td>Add-one (Laplace)</td><td>1700s</td><td>Pretend every event was seen once more than it was. Simple, and badly overestimates the unseen.</td></tr>
+          <tr><td>Good-Turing</td><td>1953</td><td>Estimate the mass of unseen events from how many events were seen exactly once.</td></tr>
+          <tr><td>Katz backoff</td><td>1987</td><td>Discount seen counts, hand the saved mass to the shorter context. Our backoff, made into a real probability distribution.</td></tr>
+          <tr><td>Kneser-Ney</td><td>1995</td><td>When backing off, ask how many different contexts a symbol follows, not how often it appears. The long-standing best n-gram smoother.</td></tr>
+          <tr><td>Stupid backoff</td><td>2007</td><td>Skip normalization, just multiply by 0.4 and back off. At web scale, with trillions of words, it was good enough.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="insight">
+      <strong>What it teaches:</strong> the hard part of an n-gram model is
+      never the counting, it is deciding what to believe about everything
+      you didn't count.
+    </div>
+  </div>
+
+  <!-- ── Stage: The wall ───────────────────────────────────────── -->
+
+  <div class="stage" id="wall">
+    <div class="year">The wall</div>
+    <h2>A fixed window is a hard ceiling</h2>
+    <p class="desc">
+      Every model on this page shares one property: nothing older than the
+      last N symbols can influence the next one. Making N larger is the only
+      way to remember more, and each step multiplies the number of contexts
+      while the data stays the same size. Smoothing softens the sparsity;
+      it can't touch the window.
+    </p>
+    <div class="limitation">
+      The next step was to stop storing contexts and start
+      <em>learning a representation</em> of them (Bengio et al., 2003),
+      then to drop the window entirely. That story, RNNs to LSTMs to
+      transformers, continues in <a href="../machine_learning/">machine_learning</a>,
+      exhibits 10&ndash;13.
+    </div>
+  </div>
 
   <div class="divider">- - -</div>
 
-  <h2 style="color: #e94560; font-size: 1.1rem; margin-bottom: 1rem;">Parameter Count Growth</h2>
+  <!-- ── Other branches ────────────────────────────────────────── -->
 
-  <div class="diagram">
-    <div class="label">Learnable parameters (all trained on ~44 names per category)</div>
-    <div id="param-bars" style="display: flex; flex-direction: column; gap: 0.5rem;">
-      <!-- Filled by JS -->
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════════════════════════ -->
-  <!-- THE PUNCHLINE                                               -->
-  <!-- ═══════════════════════════════════════════════════════════ -->
+  <h2 class="section">Other branches of the same idea</h2>
+  <p class="desc">
+    Language was only one direction the Markov property went.
+  </p>
+  <ul class="branches">
+    <li><strong>Markov chain Monte Carlo (1953).</strong> Metropolis and
+      colleagues built a chain whose long-run distribution is the one you
+      want to sample from. Walk it long enough and you are sampling it.
+      The basis of modern Bayesian computation.</li>
+    <li><strong>Hidden Markov models (late 1960s&ndash;1980s).</strong> The
+      states are hidden and only emit observations. Baum and colleagues gave
+      the training algorithm; at IBM and elsewhere, HMMs paired with n-gram
+      language models became the standard architecture for speech
+      recognition.</li>
+    <li><strong>PageRank (1998).</strong> A random surfer clicking links is a
+      Markov chain over web pages; a page's rank is how often the surfer is
+      there in the long run.</li>
+  </ul>
 
   <div class="divider">- - -</div>
 
-  <h2 style="color: #e94560; font-size: 1.1rem; margin-bottom: 1rem;">The Punchline</h2>
-
-  <p class="desc" style="color: #aaa; font-size: 0.9rem; margin-bottom: 1rem;">
-    Every approach generates the same thing — Greek, Norse, and Celtic mythology
-    names — from the same training data. The progression reveals a century of
-    ideas about how to model sequential data:
+  <p class="desc" style="font-size: 0.78rem; color: #777;">
+    Training data: mythology names (Greek, Norse, Celtic) from
+    <a href="https://github.com/repushko/mythology_names_dataset">repushko/mythology_names_dataset</a>
+    (CC0). The order-1 generator follows
+    <a href="https://donjon.bin.sh/code/name/">donjon's Markov Name Generator</a>
+    (public domain).
   </p>
 
-  <div style="font-size: 0.85rem; line-height: 2; color: #bbb; padding-left: 1rem; border-left: 2px solid #333;">
-    <strong style="color: #e94560;">Counting</strong> &rarr; frequency tables work, but can't generalize<br>
-    <strong style="color: #e94560;">Hidden state</strong> &rarr; neural networks compress history, but gradients vanish<br>
-    <strong style="color: #e94560;">Gating</strong> &rarr; additive cell state fixes gradients, but processing is sequential<br>
-    <strong style="color: #e94560;">Attention</strong> &rarr; direct access to everything, parallel processing, scales to GPT/Claude
-  </div>
-
-  <p class="desc" style="color: #888; font-size: 0.85rem; margin-top: 1.5rem;">
-    The transformer in this project has ~14,590 parameters. GPT-3 has 175 billion.
-    Claude has even more. But the core attention mechanism is identical — the same
-    Q, K, V projections, the same scaled dot-product, the same softmax. The only
-    differences are scale: more layers, more heads, more dimensions, more data.
-  </p>
-
-  <div class="demo-links" style="margin-top: 2rem;">
-    <a href="rnn_demo.html">RNN demo</a>
-    <a href="lstm_demo.html">LSTM demo</a>
-    <a href="transformer_demo.html">Transformer demo</a>
-    <a href="name_compare.html">Compare all 5 methods</a>
-  </div>
-
-  <!-- ═══════════════════════════════════════════════════════════ -->
-  <!-- THE BIGGER PICTURE                                          -->
-  <!-- ═══════════════════════════════════════════════════════════ -->
-
-  <div class="divider">- - -</div>
-
-  <h2 id="bigger-picture" style="color: #e94560; font-size: 1.1rem; margin-bottom: 0.5rem;">The Bigger Picture</h2>
-  <p class="desc" style="color: #aaa; font-size: 0.9rem; margin-bottom: 1.5rem;">
-    This project covers five points on a much larger map. Here's where
-    everything fits in the full landscape of sequence modeling.
-  </p>
-
-  <!-- RNN Family -->
-  <h3 style="color: #ccc; font-size: 0.95rem; margin-bottom: 0.8rem;">The Recurrent Family</h3>
-  <p class="desc" style="color: #999; font-size: 0.85rem; margin-bottom: 0.8rem;">
-    All recurrent architectures share one trait: they process sequences
-    step by step, carrying a hidden state forward. The differences are in
-    how that state is updated and protected.
-  </p>
-
-  <table class="compare-table">
-    <thead>
-      <tr>
-        <th>Architecture</th>
-        <th>Year</th>
-        <th>Key Idea</th>
-        <th>In This Project?</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>Vanilla RNN</strong></td>
-        <td>1990</td>
-        <td>Hidden state feeds back into itself via W<sub>hh</sub></td>
-        <td style="color: #e94560;">Yes &mdash; Step 3</td>
-      </tr>
-      <tr>
-        <td><strong>LSTM</strong></td>
-        <td>1997</td>
-        <td>Cell state + 3 gates (forget, input, output) fix vanishing gradients</td>
-        <td style="color: #e94560;">Yes &mdash; Step 4</td>
-      </tr>
-      <tr>
-        <td><strong>GRU</strong></td>
-        <td>2014</td>
-        <td>Simplified LSTM &mdash; 2 gates (reset, update) instead of 3, similar results</td>
-        <td style="color: #666;">No &mdash; lateral move from LSTM, not a new concept</td>
-      </tr>
-      <tr>
-        <td><strong>Bidirectional</strong></td>
-        <td>1997</td>
-        <td>Run forward AND backward, concatenate both hidden states</td>
-        <td style="color: #666;">No &mdash; names are generated left-to-right</td>
-      </tr>
-      <tr>
-        <td><strong>Stacked / Deep</strong></td>
-        <td>&mdash;</td>
-        <td>Multiple RNN layers on top of each other for more capacity</td>
-        <td style="color: #666;">No &mdash; names are too short to benefit</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- CNN: The Spatial Branch -->
-  <h3 id="cnn-section" style="color: #ccc; font-size: 0.95rem; margin-top: 2rem; margin-bottom: 0.8rem;">The Spatial Branch: Convolutional Neural Networks</h3>
-  <p class="desc" style="color: #999; font-size: 0.85rem; margin-bottom: 0.8rem;">
-    Everything above handles <strong style="color:#ccc;">sequences</strong> &mdash; one character after another.
-    But what about <strong style="color:#ccc;">grid data</strong> like images, where spatial relationships matter?
-    That's where CNNs come in. They're a parallel branch of deep learning
-    that emerged alongside RNNs and eventually merged with transformers.
-  </p>
-
-  <div class="diagram">
-    <div class="label">The core idea &mdash; a small filter slides across the input</div>
-    <div class="conv-demo" id="conv-demo">
-      <!-- Filled by JS -->
-    </div>
-    <div style="font-size: 0.72rem; color: #666; margin-top: 0.4rem;">
-      A 3&times;3 filter detects one specific pattern (edge, curve, texture).
-      Stack many filters to detect many features. Stack layers to detect
-      features of features &mdash; edges become shapes become objects.
-    </div>
-  </div>
-
-  <div class="eq-block">
-    <div class="eq-label">Convolution &mdash; the fundamental operation</div>
-    <code><span class="comment"># Slide a small filter (kernel) across the input</span>
-<span class="comment"># At each position, compute dot product: filter &middot; patch</span>
-for y in range(out_h):
-    for x in range(out_w):
-        patch = input[y:y+3, x:x+3]       <span class="comment"># 3&times;3 region</span>
-        <span class="highlight">output[y, x] = sum(patch * filter)</span>  <span class="comment"># dot product</span>
-
-<span class="comment"># Same filter, same weights, applied everywhere = "weight sharing"</span>
-<span class="comment"># This is what makes CNNs efficient: a 3&times;3 filter has only 9 params</span>
-<span class="comment"># regardless of whether the image is 28&times;28 or 4096&times;4096</span></code>
-  </div>
-
-  <div class="eq-block">
-    <div class="eq-label">A typical CNN pipeline</div>
-    <code>image (28&times;28&times;1)
-  &darr; Conv 3&times;3, 32 filters &rarr; ReLU     <span class="comment"># detect low-level features (edges)</span>
-  &darr; MaxPool 2&times;2                       <span class="comment"># shrink spatial dimensions by half</span>
-  &darr; Conv 3&times;3, 64 filters &rarr; ReLU     <span class="comment"># detect higher-level features (shapes)</span>
-  &darr; MaxPool 2&times;2                       <span class="comment"># shrink again</span>
-  &darr; Flatten                            <span class="comment"># (7&times;7&times;64) &rarr; (3136,) vector</span>
-  &darr; Linear &rarr; softmax                 <span class="comment"># classify</span></code>
-  </div>
-
-  <div class="insight">
-    <strong>Key properties of CNNs:</strong><br>
-    <strong>Local connectivity</strong> &mdash; each neuron sees only a small patch, not the whole image.<br>
-    <strong>Weight sharing</strong> &mdash; the same filter is applied everywhere, so a horizontal-edge
-    detector works regardless of position. A 3&times;3 filter has 9 parameters whether the image
-    is 100&times;100 or 10,000&times;10,000.<br>
-    <strong>Translation invariance</strong> &mdash; a cat in the top-left activates the same features
-    as a cat in the bottom-right.<br>
-    <strong>Hierarchical features</strong> &mdash; early layers find edges, middle layers find shapes,
-    deep layers find objects. Each layer builds on the one below it.
-  </div>
-
-  <table class="compare-table">
-    <thead>
-      <tr>
-        <th>Architecture</th>
-        <th>Year</th>
-        <th>Key Idea</th>
-        <th>Used For</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>LeNet</strong></td>
-        <td>1989</td>
-        <td>First practical CNN &mdash; handwritten digit recognition</td>
-        <td>Postal codes, checks</td>
-      </tr>
-      <tr>
-        <td><strong>AlexNet</strong></td>
-        <td>2012</td>
-        <td>Deep CNN + GPU training &mdash; won ImageNet by a landslide</td>
-        <td>Kicked off the deep learning era</td>
-      </tr>
-      <tr>
-        <td><strong>VGG</strong></td>
-        <td>2014</td>
-        <td>Very deep (16-19 layers), only 3&times;3 filters &mdash; simplicity wins</td>
-        <td>Image classification, feature extraction</td>
-      </tr>
-      <tr>
-        <td><strong>ResNet</strong></td>
-        <td>2015</td>
-        <td>Residual connections &mdash; skip connections let gradients flow through 150+ layers</td>
-        <td>Everything. ResNet's skip connection is also in every transformer.</td>
-      </tr>
-      <tr>
-        <td><strong>U-Net</strong></td>
-        <td>2015</td>
-        <td>Encoder-decoder with skip connections &mdash; preserves spatial detail</td>
-        <td>Medical imaging, segmentation, diffusion models</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div class="insight" style="margin-top: 1rem;">
-    <strong>ResNet's residual connection</strong> &mdash; <code style="color:#e94560;">output = F(x) + x</code> &mdash;
-    is the same idea as the transformer's residual paths. It solved the same
-    vanishing gradient problem for CNNs that LSTM solved for RNNs, and then
-    transformers adopted it too. One idea, three architectures.
-  </div>
-
-  <!-- CNN vs RNN: Two Dimensions -->
-  <h3 style="color: #ccc; font-size: 0.95rem; margin-top: 2rem; margin-bottom: 0.8rem;">Two Dimensions of Intelligence</h3>
-  <p class="desc" style="color: #999; font-size: 0.85rem; margin-bottom: 0.8rem;">
-    CNNs and RNNs aren't competitors &mdash; they solve different axes of the same
-    problem. Many real-world systems combine both.
-  </p>
-
-  <div class="diagram">
-    <div class="label">Spatial vs. temporal &mdash; and how they combine</div>
-    <div class="two-track">
-      <div class="track">
-        <span class="track-label">Spatial</span>
-        <span class="box" style="border: 1px solid #444; padding: 0.3rem 0.6rem; border-radius: 3px; color: #ccc;">image / frame</span>
-        <span class="arr" style="color:#555;">&rarr;</span>
-        <span class="box key" style="border-color: #e94560; background: rgba(233, 69, 96, 0.12); color: #e94560; padding: 0.3rem 0.6rem; border-radius: 3px;">CNN</span>
-        <span class="arr" style="color:#555;">&rarr;</span>
-        <span class="box" style="border: 1px solid #444; padding: 0.3rem 0.6rem; border-radius: 3px; color: #ccc;">feature vector</span>
-      </div>
-      <div class="track">
-        <span class="track-label">Temporal</span>
-        <span class="box" style="border: 1px solid #444; padding: 0.3rem 0.6rem; border-radius: 3px; color: #ccc;">feature sequence</span>
-        <span class="arr" style="color:#555;">&rarr;</span>
-        <span class="box key" style="border-color: #e94560; background: rgba(233, 69, 96, 0.12); color: #e94560; padding: 0.3rem 0.6rem; border-radius: 3px;">RNN / LSTM</span>
-        <span class="arr" style="color:#555;">&rarr;</span>
-        <span class="box" style="border: 1px solid #444; padding: 0.3rem 0.6rem; border-radius: 3px; color: #ccc;">prediction</span>
-      </div>
-      <div class="track">
-        <span class="track-label">Combined</span>
-        <span class="box" style="border: 1px solid #444; padding: 0.3rem 0.6rem; border-radius: 3px; color: #ccc;">video frames</span>
-        <span class="arr" style="color:#555;">&rarr;</span>
-        <span class="box" style="border: 1px solid #444; padding: 0.3rem 0.6rem; border-radius: 3px; color: #ccc;">CNN per frame</span>
-        <span class="arr" style="color:#555;">&rarr;</span>
-        <span class="box" style="border: 1px solid #444; padding: 0.3rem 0.6rem; border-radius: 3px; color: #ccc;">LSTM over time</span>
-        <span class="arr" style="color:#555;">&rarr;</span>
-        <span class="box accent" style="border-color: #e94560; color: #e94560; padding: 0.3rem 0.6rem; border-radius: 3px;">action / anomaly</span>
-      </div>
-    </div>
-    <div style="font-size: 0.72rem; color: #666; margin-top: 0.5rem;">
-      Video understanding, anomaly detection, autonomous driving, medical monitoring &mdash;
-      anywhere you have sequences of structured data, CNN extracts "what" and RNN/LSTM tracks "when."
-    </div>
-  </div>
-
-  <table class="compare-table">
-    <thead>
-      <tr>
-        <th></th>
-        <th>CNN</th>
-        <th>RNN / LSTM</th>
-        <th>Transformer</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>Operates on</strong></td>
-        <td>Grids (images, 2D maps)</td>
-        <td>Sequences (text, time series)</td>
-        <td>Both (with position encoding)</td>
-      </tr>
-      <tr>
-        <td><strong>Core operation</strong></td>
-        <td>Convolution (local dot product)</td>
-        <td>Recurrence (h<sub>t</sub> = f(h<sub>t-1</sub>, x<sub>t</sub>))</td>
-        <td>Attention (global dot product)</td>
-      </tr>
-      <tr>
-        <td><strong>Receptive field</strong></td>
-        <td>Local &rarr; global via stacking</td>
-        <td>All past (via hidden state)</td>
-        <td>Global (every position, always)</td>
-      </tr>
-      <tr>
-        <td><strong>Weight sharing</strong></td>
-        <td>Across spatial positions</td>
-        <td>Across timesteps</td>
-        <td>Across positions (learned)</td>
-      </tr>
-      <tr>
-        <td><strong>Parallelizable?</strong></td>
-        <td>Yes</td>
-        <td>No</td>
-        <td>Yes</td>
-      </tr>
-      <tr>
-        <td><strong>Key strength</strong></td>
-        <td>Spatial patterns, efficiency</td>
-        <td>Sequential dependencies</td>
-        <td>Long-range, any modality</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div class="limitation" style="margin-top: 1rem;">
-    <strong>The convergence:</strong> Modern Vision Transformers (ViT, 2020) replace CNNs
-    with attention on image patches. The same attention mechanism from this project's
-    text transformer now works on images too. The two tracks are merging &mdash;
-    transformers are becoming the universal architecture for both spatial and temporal data.
-  </div>
-
-  <!-- Where It All Comes Together: Applications -->
-  <h3 id="applications-section" style="color: #ccc; font-size: 0.95rem; margin-top: 2rem; margin-bottom: 0.8rem;">Where It All Comes Together</h3>
-  <p class="desc" style="color: #999; font-size: 0.85rem; margin-bottom: 1.2rem;">
-    These architectures rarely live in isolation. The interesting problems
-    require combining them. Two examples that use nearly every concept
-    covered above.
-  </p>
-
-  <!-- Text Recognition (OCR) -->
-  <h4 style="color: #e94560; font-size: 0.85rem; margin-bottom: 0.6rem; letter-spacing: 0.05em; text-transform: uppercase;">Text Recognition (OCR)</h4>
-  <p class="desc" style="color: #999; font-size: 0.85rem; margin-bottom: 0.8rem;">
-    Reading text from images &mdash; scanned documents, street signs, license plates &mdash;
-    is the literal intersection of spatial and sequential processing. You need to
-    see the shapes (CNN) and understand them as a sequence of characters (RNN/Transformer).
-  </p>
-
-  <div class="diagram">
-    <div class="label">Classic OCR pipeline &mdash; CRNN (CNN + RNN + CTC)</div>
-    <div class="flow">
-      <span class="box">image of text</span>
-      <span class="arr">&rarr;</span>
-      <span class="box key">CNN</span>
-      <span class="arr">&rarr;</span>
-      <span class="box">feature columns</span>
-      <span class="arr">&rarr;</span>
-      <span class="box key">BiLSTM</span>
-      <span class="arr">&rarr;</span>
-      <span class="box accent">CTC decode</span>
-      <span class="arr">&rarr;</span>
-      <span class="box">"HELLO"</span>
-    </div>
-    <div style="font-size: 0.72rem; color: #666; margin-top: 0.4rem;">
-      CNN extracts visual features from each vertical slice.
-      Bidirectional LSTM reads the sequence of slices left-to-right and right-to-left.
-      CTC loss aligns variable-length output to variable-length labels without explicit segmentation.
-    </div>
-  </div>
-
-  <div class="eq-block">
-    <div class="eq-label">The stages and what they use</div>
-    <code><span class="comment"># Stage 1: See the shapes (CNN &mdash; spatial)</span>
-image (32&times;128&times;1)
-  &darr; Conv layers extract features per vertical strip
-  &darr; output: (1&times;32&times;512) &mdash; 32 positions, 512 features each
-
-<span class="comment"># Stage 2: Read the sequence (BiLSTM &mdash; temporal)</span>
-features (32&times;512)
-  &darr; Forward LSTM:  reads left &rarr; right
-  &darr; Backward LSTM: reads right &rarr; left
-  &darr; Concat: each position sees full left AND right context
-
-<span class="comment"># Stage 3: Decode (CTC loss &mdash; alignment)</span>
-per-position predictions &rarr; collapse repeated chars &rarr; remove blanks
-  "HH-EE-LL-LL-OO" &rarr; "H-E-L-L-O" &rarr; <span class="highlight">"HELLO"</span></code>
-  </div>
-
-  <div class="insight">
-    <strong>Every concept from this project appears here:</strong>
-    CNN convolution and pooling (spatial features),
-    LSTM with forget/input/output gates (sequential reading),
-    bidirectional processing (context from both directions),
-    softmax over a vocabulary (character prediction).
-    Modern OCR systems (like TrOCR) replace the CNN+LSTM with a
-    Vision Transformer encoder + text Transformer decoder &mdash;
-    same task, attention all the way through.
-  </div>
-
-  <!-- Anomaly Detection -->
-  <h4 style="color: #e94560; font-size: 0.85rem; margin-top: 2rem; margin-bottom: 0.6rem; letter-spacing: 0.05em; text-transform: uppercase;">Anomaly Detection</h4>
-  <p class="desc" style="color: #999; font-size: 0.85rem; margin-bottom: 0.8rem;">
-    Learn what "normal" looks like, flag anything that deviates. The core
-    idea is simple, but the architecture depends on what kind of data you have.
-  </p>
-
-  <table class="compare-table">
-    <thead>
-      <tr>
-        <th>Data Type</th>
-        <th>Architecture</th>
-        <th>How It Works</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>Time series</strong><br><span style="color:#666;font-size:0.75rem;">sensor readings, server metrics</span></td>
-        <td>LSTM autoencoder</td>
-        <td>Encode normal sequences into a compressed state, decode back.
-            High reconstruction error = anomaly. The LSTM's cell state tracks
-            what "normal" temporal patterns look like.</td>
-      </tr>
-      <tr>
-        <td><strong>Images</strong><br><span style="color:#666;font-size:0.75rem;">manufacturing defects, X-rays</span></td>
-        <td>CNN autoencoder / GAN</td>
-        <td>Train on normal images only. The CNN learns normal textures and
-            shapes. Abnormal images reconstruct poorly &mdash; the error map
-            highlights exactly where the defect is.</td>
-      </tr>
-      <tr>
-        <td><strong>Video / thermal frames</strong><br><span style="color:#666;font-size:0.75rem;">surveillance, infrastructure monitoring</span></td>
-        <td>CNN + LSTM</td>
-        <td>CNN extracts spatial features per frame (what does this frame look like?).
-            LSTM tracks temporal evolution (how are frames changing over time?).
-            Anomaly = spatial appearance OR temporal pattern deviates from learned normal.</td>
-      </tr>
-      <tr>
-        <td><strong>Text / logs</strong><br><span style="color:#666;font-size:0.75rem;">error logs, network traffic</span></td>
-        <td>Transformer</td>
-        <td>Self-attention over log sequences. Normal patterns form predictable
-            attention weights. Unusual sequences produce high perplexity &mdash;
-            the model is "surprised," which signals an anomaly.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div class="diagram">
-    <div class="label">Spatio-temporal anomaly detection &mdash; CNN + LSTM</div>
-    <div class="flow">
-      <span class="box">frame<sub>1</sub></span>
-      <span class="box">frame<sub>2</sub></span>
-      <span class="box">frame<sub>3</sub></span>
-      <span class="box" style="color:#666;">...</span>
-      <span class="box">frame<sub>t</sub></span>
-    </div>
-    <div style="font-size: 0.72rem; color: #555; margin: 0.3rem 0 0.3rem 1rem;">&darr; each frame independently</div>
-    <div class="flow">
-      <span class="box key">CNN</span>
-      <span class="box key">CNN</span>
-      <span class="box key">CNN</span>
-      <span class="box" style="color:#666; border:none;">...</span>
-      <span class="box key">CNN</span>
-      <span style="font-size:0.72rem; color:#666; margin-left:0.5rem;">same weights (shared)</span>
-    </div>
-    <div style="font-size: 0.72rem; color: #555; margin: 0.3rem 0 0.3rem 1rem;">&darr; feature vectors</div>
-    <div class="flow">
-      <span class="box">f<sub>1</sub></span>
-      <span class="arr">&rarr;</span>
-      <span class="box accent">LSTM</span>
-      <span class="arr">&rarr;</span>
-      <span class="box">f<sub>2</sub></span>
-      <span class="arr">&rarr;</span>
-      <span class="box accent">LSTM</span>
-      <span class="arr">&rarr;</span>
-      <span class="box" style="color:#666;">...</span>
-      <span class="arr">&rarr;</span>
-      <span class="box accent">LSTM</span>
-      <span class="arr">&rarr;</span>
-      <span class="box" style="border-color: #e94560; background: rgba(233, 69, 96, 0.12); color: #e94560;">normal / anomaly</span>
-    </div>
-    <div style="font-size: 0.72rem; color: #666; margin-top: 0.5rem;">
-      The CNN answers "what does this frame look like?" The LSTM answers
-      "is this sequence of frames behaving normally?" Both must agree
-      for the system to flag an anomaly, reducing false positives.
-    </div>
-  </div>
-
-  <div class="eq-block">
-    <div class="eq-label">Anomaly scoring &mdash; the core idea</div>
-    <code><span class="comment"># Train on NORMAL data only</span>
-model.fit(normal_sequences)
-
-<span class="comment"># At inference, measure how "surprised" the model is</span>
-prediction = model.predict(input_sequence)
-<span class="highlight">anomaly_score = reconstruction_error(input, prediction)</span>
-
-<span class="comment"># If the model can't reconstruct it, it's never seen anything like it</span>
-if anomaly_score > threshold:
-    flag_anomaly()                      <span class="comment"># this is new / unusual</span></code>
-  </div>
-
-  <div class="insight">
-    <strong>The connection to this project:</strong> The name generator learns
-    "normal" character patterns for Greek, Norse, and Celtic names. If you
-    fed it "Xzqwk," every model would assign extremely low probability &mdash;
-    high "surprise" &mdash; because it violates learned patterns. That's anomaly
-    detection. The same math that generates plausible names can also flag
-    implausible ones. Generation and detection are two sides of the same coin.
-  </div>
-
-  <div class="limitation">
-    <strong>Temperature as confidence:</strong> In our name generators,
-    temperature controls how "confident" the model is in its predictions.
-    Low temperature = conservative = only high-probability outputs.
-    In anomaly detection, the equivalent is the threshold &mdash; how surprised
-    does the model need to be before it flags something? Too sensitive =
-    false alarms. Too lenient = missed anomalies. Same tradeoff.
-  </div>
-
-  <!-- Transformer Family -->
-  <h3 style="color: #ccc; font-size: 0.95rem; margin-top: 2rem; margin-bottom: 0.8rem;">The Transformer Family</h3>
-  <p class="desc" style="color: #999; font-size: 0.85rem; margin-bottom: 0.8rem;">
-    The 2017 paper "Attention Is All You Need" introduced a single
-    encoder-decoder architecture. It immediately split into three variants,
-    each dominating a different domain.
-  </p>
-
-  <table class="compare-table">
-    <thead>
-      <tr>
-        <th>Architecture</th>
-        <th>Year</th>
-        <th>Key Idea</th>
-        <th>Used By</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>Encoder-Decoder</strong></td>
-        <td>2017</td>
-        <td>Original transformer &mdash; encoder reads input, decoder generates output</td>
-        <td>T5, translation models</td>
-      </tr>
-      <tr>
-        <td><strong>Encoder-Only</strong></td>
-        <td>2018</td>
-        <td>Drop the decoder. Bidirectional attention. Understands text, doesn't generate it.</td>
-        <td>BERT, embeddings, classification</td>
-      </tr>
-      <tr style="background: rgba(233, 69, 96, 0.05);">
-        <td><strong>Decoder-Only</strong></td>
-        <td>2018</td>
-        <td>Drop the encoder. Causal attention. Predict the next token. <span style="color: #e94560;">This is what LLMs are.</span></td>
-        <td>GPT, Claude, LLaMA, Gemini</td>
-      </tr>
-      <tr>
-        <td><strong>Mixture of Experts</strong></td>
-        <td>2022+</td>
-        <td>Multiple FFN "experts" per layer, a router picks which to activate</td>
-        <td>Mixtral, some GPT-4 variants</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div class="insight" style="margin-top: 1rem;">
-    <strong>This project builds a decoder-only transformer</strong> &mdash; the same
-    architecture class as GPT and Claude. Causal (left-to-right) attention,
-    autoregressive generation: predict the next token, append it, repeat.
-  </div>
-
-  <!-- Where LLMs Fit -->
-  <h3 style="color: #ccc; font-size: 0.95rem; margin-top: 2rem; margin-bottom: 0.8rem;">From This Project to LLMs</h3>
-  <p class="desc" style="color: #999; font-size: 0.85rem; margin-bottom: 0.8rem;">
-    The architecture is identical. The difference is purely scale.
-  </p>
-
-  <table class="compare-table">
-    <thead>
-      <tr>
-        <th></th>
-        <th>This Project</th>
-        <th>GPT-3</th>
-        <th>Claude / GPT-4</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>Layers</strong></td>
-        <td class="num">1</td>
-        <td class="num">96</td>
-        <td>undisclosed</td>
-      </tr>
-      <tr>
-        <td><strong>Attention Heads</strong></td>
-        <td class="num">2</td>
-        <td class="num">96</td>
-        <td>undisclosed</td>
-      </tr>
-      <tr>
-        <td><strong>d_model</strong></td>
-        <td class="num">32</td>
-        <td class="num">12,288</td>
-        <td>undisclosed</td>
-      </tr>
-      <tr>
-        <td><strong>Parameters</strong></td>
-        <td class="num">~14,590</td>
-        <td class="num">175,000,000,000</td>
-        <td>more</td>
-      </tr>
-      <tr>
-        <td><strong>Vocabulary</strong></td>
-        <td>28 characters</td>
-        <td>~50,000 tokens</td>
-        <td>~100,000 tokens</td>
-      </tr>
-      <tr>
-        <td><strong>Training Data</strong></td>
-        <td>132 names</td>
-        <td>300B tokens</td>
-        <td>trillions of tokens</td>
-      </tr>
-      <tr>
-        <td><strong>Core Math</strong></td>
-        <td colspan="3" style="color: #e94560; text-align: center;">
-          Same Q, K, V &middot; Same scaled dot-product &middot; Same softmax &middot; Same residual + LayerNorm + FFN
-        </td>
-      </tr>
-    </tbody>
-  </table>
-
-  <p class="desc" style="color: #888; font-size: 0.85rem; margin-top: 1rem;">
-    If you understand how the 14,590-parameter transformer in this project works &mdash;
-    the attention, the residual connections, the layer norms, the autoregressive
-    sampling &mdash; you understand the core of every large language model.
-    Everything else is engineering: more data, more compute, better tokenizers,
-    RLHF, and a lot of GPUs.
-  </p>
-
-  <!-- ═══════════════════════════════════════════════════════════ -->
-  <!-- REAL-WORLD APPLICATIONS                                     -->
-  <!-- ═══════════════════════════════════════════════════════════ -->
-
-  <div class="divider">- - -</div>
-
-  <h2 id="real-world" style="color: #e94560; font-size: 1.1rem; margin-bottom: 0.5rem;">What These Architectures Actually Solve</h2>
-  <p class="desc" style="color: #aaa; font-size: 0.9rem; margin-bottom: 0.5rem;">
-    Our name generator asks "given what I've seen so far, what comes next?"
-    Nearly every application below asks the exact same question &mdash; just
-    applied to a different alphabet.
-  </p>
-  <p class="desc" style="color: #888; font-size: 0.85rem; margin-bottom: 1.5rem;">
-    Characters &rarr; amino acids &rarr; pixels &rarr; stock prices &rarr;
-    musical notes &rarr; DNA bases. The architectures are the same. The data changes.
-  </p>
-
-  <!-- Language & Communication -->
-  <h3 style="color: #ccc; font-size: 0.95rem; margin-bottom: 0.8rem;">Language &amp; Communication</h3>
-  <table class="compare-table">
-    <thead>
-      <tr>
-        <th>Problem</th>
-        <th>Architecture</th>
-        <th>How It Maps to Our Project</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>Machine translation</strong><br><span style="color:#666;font-size:0.75rem;">English &rarr; French</span></td>
-        <td>Transformer (encoder-decoder)</td>
-        <td>Encoder reads source language, decoder generates target &mdash;
-            same attention, same softmax over a vocabulary</td>
-      </tr>
-      <tr>
-        <td><strong>Summarization</strong></td>
-        <td>Transformer (decoder-only)</td>
-        <td>Predict the next word in a summary, same autoregressive loop
-            as our name generator but for paragraphs</td>
-      </tr>
-      <tr>
-        <td><strong>Speech recognition</strong></td>
-        <td>CNN + Transformer (Whisper)</td>
-        <td>CNN on spectrograms (spatial), Transformer decodes to text (sequential)</td>
-      </tr>
-      <tr>
-        <td><strong>Chatbots / assistants</strong><br><span style="color:#666;font-size:0.75rem;">GPT, Claude</span></td>
-        <td>Decoder-only Transformer</td>
-        <td>Literally our transformer architecture. 28-char vocab &rarr; 100K-token vocab.
-            1 layer &rarr; 100+ layers. Same Q, K, V.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- Code & Software -->
-  <h3 style="color: #ccc; font-size: 0.95rem; margin-top: 2rem; margin-bottom: 0.8rem;">Code &amp; Software</h3>
-  <table class="compare-table">
-    <thead>
-      <tr>
-        <th>Problem</th>
-        <th>Architecture</th>
-        <th>How It Maps to Our Project</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>Code completion</strong><br><span style="color:#666;font-size:0.75rem;">Copilot, Cursor</span></td>
-        <td>Decoder-only Transformer</td>
-        <td>Trained on code instead of names. Predicts the next token in a
-            program the same way we predict the next character in a name.</td>
-      </tr>
-      <tr>
-        <td><strong>Bug detection</strong></td>
-        <td>Transformer / LSTM</td>
-        <td>Anomaly detection on code patterns &mdash; high model surprise
-            = probable bug. Same math as our anomaly scoring section.</td>
-      </tr>
-      <tr>
-        <td><strong>Code translation</strong><br><span style="color:#666;font-size:0.75rem;">Python &rarr; Rust</span></td>
-        <td>Transformer (encoder-decoder)</td>
-        <td>Same as machine translation, but the "languages" are programming languages</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- Biology & Medicine -->
-  <h3 style="color: #ccc; font-size: 0.95rem; margin-top: 2rem; margin-bottom: 0.8rem;">Biology &amp; Medicine</h3>
-  <table class="compare-table">
-    <thead>
-      <tr>
-        <th>Problem</th>
-        <th>Architecture</th>
-        <th>How It Maps to Our Project</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>Protein folding</strong><br><span style="color:#666;font-size:0.75rem;">AlphaFold</span></td>
-        <td>Transformer</td>
-        <td>Attention over amino acid sequences &mdash; same Q, K, V math.
-            Proteins are strings from a 20-character alphabet (vs our 26).</td>
-      </tr>
-      <tr>
-        <td><strong>Drug discovery</strong></td>
-        <td>RNN / Transformer</td>
-        <td>Molecules encoded as SMILES strings (characters, like names).
-            Generate novel molecules the same way we generate novel names.</td>
-      </tr>
-      <tr>
-        <td><strong>Medical imaging</strong><br><span style="color:#666;font-size:0.75rem;">tumor detection</span></td>
-        <td>CNN (U-Net, ResNet)</td>
-        <td>CNN feature hierarchy: edges &rarr; textures &rarr; structures &rarr; tumors.
-            Anomaly detection on what "healthy" looks like.</td>
-      </tr>
-      <tr>
-        <td><strong>Genomics</strong></td>
-        <td>LSTM / Transformer</td>
-        <td>DNA is a sequence of A, T, G, C &mdash; a 4-character alphabet.
-            Same sequential modeling, same attention, different letters.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- Vision & Robotics -->
-  <h3 style="color: #ccc; font-size: 0.95rem; margin-top: 2rem; margin-bottom: 0.8rem;">Vision &amp; Robotics</h3>
-  <table class="compare-table">
-    <thead>
-      <tr>
-        <th>Problem</th>
-        <th>Architecture</th>
-        <th>How It Maps to Our Project</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>Self-driving cars</strong></td>
-        <td>CNN + Transformer</td>
-        <td>CNN sees each camera frame (spatial), temporal model predicts
-            what happens next (sequential). Same two-track pattern.</td>
-      </tr>
-      <tr>
-        <td><strong>Image generation</strong><br><span style="color:#666;font-size:0.75rem;">DALL-E, Midjourney</span></td>
-        <td>Transformer + U-Net CNN</td>
-        <td>Transformer understands the text prompt, diffusion model (U-Net CNN)
-            generates the image. Attention bridges language and vision.</td>
-      </tr>
-      <tr>
-        <td><strong>Object detection</strong><br><span style="color:#666;font-size:0.75rem;">YOLO, DETR</span></td>
-        <td>CNN / Transformer</td>
-        <td>CNN extracts features, Transformer (DETR) attends to object
-            relationships. Find every car, person, sign in a frame.</td>
-      </tr>
-      <tr>
-        <td><strong>Satellite analysis</strong></td>
-        <td>CNN + temporal model</td>
-        <td>CNN on imagery, LSTM/Transformer on change over time.
-            Track deforestation, urban growth, crop health.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- Finance & Business -->
-  <h3 style="color: #ccc; font-size: 0.95rem; margin-top: 2rem; margin-bottom: 0.8rem;">Finance &amp; Business</h3>
-  <table class="compare-table">
-    <thead>
-      <tr>
-        <th>Problem</th>
-        <th>Architecture</th>
-        <th>How It Maps to Our Project</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>Fraud detection</strong></td>
-        <td>LSTM / Transformer</td>
-        <td>Anomaly detection on transaction sequences. Normal spending patterns
-            are "learned normal," fraud is high reconstruction error.</td>
-      </tr>
-      <tr>
-        <td><strong>Time series forecasting</strong><br><span style="color:#666;font-size:0.75rem;">stocks, energy, demand</span></td>
-        <td>LSTM / Transformer</td>
-        <td>Given price history, predict the next value. Same "what comes next?"
-            as our character prediction, but with floats instead of letters.</td>
-      </tr>
-      <tr>
-        <td><strong>Recommendation</strong><br><span style="color:#666;font-size:0.75rem;">Netflix, Spotify</span></td>
-        <td>Transformer</td>
-        <td>Attention over your watch/listen history. "Users who watched A then B
-            tend to watch C" &mdash; a Markov chain over items, learned by attention.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- Audio & Music -->
-  <h3 style="color: #ccc; font-size: 0.95rem; margin-top: 2rem; margin-bottom: 0.8rem;">Audio &amp; Music</h3>
-  <table class="compare-table">
-    <thead>
-      <tr>
-        <th>Problem</th>
-        <th>Architecture</th>
-        <th>How It Maps to Our Project</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>Music generation</strong><br><span style="color:#666;font-size:0.75rem;">Suno, Udio</span></td>
-        <td>Transformer</td>
-        <td>Notes and durations instead of characters. Same autoregressive sampling &mdash;
-            predict next note given all previous notes. Temperature controls creativity.</td>
-      </tr>
-      <tr>
-        <td><strong>Text-to-speech</strong></td>
-        <td>Transformer + CNN</td>
-        <td>Transformer produces a mel spectrogram (sequential), CNN vocoder
-            upsamples to audio waveform (spatial-like on 1D signal).</td>
-      </tr>
-      <tr>
-        <td><strong>Audio classification</strong><br><span style="color:#666;font-size:0.75rem;">species ID, sound events</span></td>
-        <td>CNN</td>
-        <td>Convert audio to spectrogram (an image), run CNN. Same spatial
-            feature detection as any other image task.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- Science & Engineering -->
-  <h3 style="color: #ccc; font-size: 0.95rem; margin-top: 2rem; margin-bottom: 0.8rem;">Science &amp; Engineering</h3>
-  <table class="compare-table">
-    <thead>
-      <tr>
-        <th>Problem</th>
-        <th>Architecture</th>
-        <th>How It Maps to Our Project</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>Weather forecasting</strong></td>
-        <td>CNN + Transformer</td>
-        <td>CNN on spatial weather maps, Transformer on temporal evolution.
-            Same CNN+LSTM two-track pattern from anomaly detection.</td>
-      </tr>
-      <tr>
-        <td><strong>Earthquake prediction</strong></td>
-        <td>LSTM / Transformer</td>
-        <td>Seismic time series &mdash; LSTM cell state tracks long-term geological
-            patterns the same way it tracks name patterns.</td>
-      </tr>
-      <tr>
-        <td><strong>Material design</strong></td>
-        <td>Transformer / GNN</td>
-        <td>Crystal structures as sequences of atoms. Generate new materials
-            the way we generate new names &mdash; sample from learned distributions.</td>
-      </tr>
-      <tr>
-        <td><strong>Particle physics</strong></td>
-        <td>CNN</td>
-        <td>Detector images from colliders. CNN finds spatial patterns in particle
-            tracks the same way it finds edges in photographs.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div class="insight" style="margin-top: 1.5rem;">
-    <strong>The unifying pattern:</strong> Every application above is some variation of
-    "given what I've observed so far, what comes next?" or "does this observation
-    look normal?" &mdash; the same two questions our name generator answers.
-    The alphabet changes (characters, amino acids, pixels, prices, notes),
-    the scale changes (14K params to 175B), but the core math &mdash; matrix
-    multiplication, softmax, gradient descent &mdash; is identical.
-  </div>
-
-</div><!-- /content -->
-
-<div class="footer">
-  Built from scratch with NumPy &middot;
-  No PyTorch, no TensorFlow, no frameworks &middot;
-  Every gradient computed by hand
 </div>
-
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- JavaScript — attention visualization + parameter bars          -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
 
 <script>
 (function() {
-  // ── Attention pattern visualization ──────────────────────────
-  // Simulated attention pattern for "achilles" (illustrative)
-  var name = '^achilles';
-  var chars = name.split('');
-  var T = chars.length;
+  var META = { table_len: 1, parts: 1, name_len: 1, initial: 1, initial_2: 1, initial_3: 1, initial_4: 1 };
+  var data = null;
 
-  // Build a plausible causal attention pattern
-  // Each row i has weights over positions 0..i (causal)
-  var attn = [];
-  for (var i = 0; i < T; i++) {
-    var row = [];
-    var total = 0;
-    for (var j = 0; j < T; j++) {
-      if (j > i) {
-        row.push(0); // causal: can't attend to future
-      } else {
-        // Stronger attention to: start token, recent positions, same char
-        var recency = Math.exp(-0.5 * (i - j));
-        var startBonus = (j === 0) ? 0.4 : 0;
-        var sameChar = (chars[i] === chars[j] && i !== j) ? 0.3 : 0;
-        var w = recency + startBonus + sameChar + 0.05;
-        row.push(w);
-        total += w;
-      }
+  var catEl = document.getElementById('cat');
+  var orderEl = document.getElementById('order');
+  var orderVal = document.getElementById('order-val');
+  var namesEl = document.getElementById('names');
+  var statusEl = document.getElementById('status');
+  var ctxEl = document.getElementById('ctx');
+  var ctxNote = document.getElementById('ctx-note');
+  var distEl = document.getElementById('dist');
+  var statsEl = document.getElementById('stats');
+
+  // ── Sampling (mirrors _select / markov_name in the Python) ──────
+
+  function select(chain, key) {
+    var total = chain.table_len[key];
+    if (!total) return null;
+    var idx = Math.floor(Math.random() * total);
+    var acc = 0;
+    var row = chain[key];
+    for (var token in row) {
+      acc += row[token];
+      if (acc > idx) return token;
     }
-    // Normalize
-    for (var j = 0; j <= i; j++) row[j] /= total;
-    attn.push(row);
+    return null;
   }
 
-  var container = document.getElementById('attn-viz');
-
-  // Header row
-  var headerRow = document.createElement('div');
-  headerRow.className = 'row';
-  var spacer = document.createElement('span');
-  spacer.className = 'ch';
-  spacer.textContent = '';
-  headerRow.appendChild(spacer);
-  for (var j = 0; j < T; j++) {
-    var ch = document.createElement('span');
-    ch.className = 'ch';
-    ch.textContent = chars[j];
-    ch.style.color = '#e94560';
-    headerRow.appendChild(ch);
-  }
-  container.appendChild(headerRow);
-
-  // Data rows
-  for (var i = 0; i < T; i++) {
-    var rowDiv = document.createElement('div');
-    rowDiv.className = 'row';
-
-    var label = document.createElement('span');
-    label.className = 'ch';
-    label.textContent = chars[i];
-    label.style.color = '#e94560';
-    rowDiv.appendChild(label);
-
-    for (var j = 0; j < T; j++) {
-      var cell = document.createElement('span');
-      cell.className = 'cell';
-      var w = attn[i][j];
-      if (w > 0) {
-        var alpha = Math.min(w * 2.5, 1.0);
-        cell.style.background = 'rgba(233, 69, 96, ' + alpha.toFixed(2) + ')';
-      } else {
-        cell.style.background = 'rgba(255,255,255,0.02)';
+  // Order-1 is the order-N walk with order = 1, so one function covers both.
+  function markovName(chain, order) {
+    var numParts = parseInt(select(chain, 'parts'), 10) || 1;
+    var parts = [];
+    for (var p = 0; p < numParts; p++) {
+      var targetLen = parseInt(select(chain, 'name_len'), 10);
+      if (!targetLen) continue;
+      var name = null;
+      for (var o = order; o >= 1; o--) {
+        var val = select(chain, o === 1 ? 'initial' : 'initial_' + o);
+        if (val !== null) { name = val; break; }
       }
-      rowDiv.appendChild(cell);
-    }
-    container.appendChild(rowDiv);
-  }
-
-  // ── Parameter count bars ────────────────────────────────────
-  var models = [
-    { name: 'Markov',       params: 700,   color: '#555' },
-    { name: 'Higher-Order', params: 2400,  color: '#666' },
-    { name: 'RNN',          params: 7900,  color: '#0f3460' },
-    { name: 'Transformer',  params: 14590, color: '#e94560' },
-    { name: 'LSTM',         params: 23580, color: '#0f3460' },
-  ];
-
-  var maxParams = 23580;
-  var barsContainer = document.getElementById('param-bars');
-
-  for (var m = 0; m < models.length; m++) {
-    var model = models[m];
-    var row = document.createElement('div');
-    row.style.cssText = 'display:flex; align-items:center; gap:0.6rem;';
-
-    var label = document.createElement('span');
-    label.style.cssText = 'width:7em; text-align:right; font-size:0.78rem; color:#aaa;';
-    label.textContent = model.name;
-    row.appendChild(label);
-
-    var barOuter = document.createElement('div');
-    barOuter.style.cssText = 'flex:1; height:1.2rem; background:#16213e; border-radius:3px; overflow:hidden;';
-
-    var barInner = document.createElement('div');
-    var pct = (model.params / maxParams * 100);
-    barInner.style.cssText = 'height:100%; border-radius:3px; transition:width 0.6s; width:' + pct + '%; background:' + model.color + ';';
-    barOuter.appendChild(barInner);
-    row.appendChild(barOuter);
-
-    var count = document.createElement('span');
-    count.style.cssText = 'width:5em; font-size:0.75rem; color:#888; font-variant-numeric:tabular-nums;';
-    count.textContent = model.params.toLocaleString();
-    row.appendChild(count);
-
-    barsContainer.appendChild(row);
-  }
-
-  // ── Convolution visualization ──────────────────────────────
-  (function() {
-    var convContainer = document.getElementById('conv-demo');
-    if (!convContainer) return;
-
-    // 5x5 "image" — a simple diagonal edge pattern
-    var img = [
-      [0.1, 0.1, 0.8, 0.9, 0.9],
-      [0.1, 0.2, 0.9, 0.9, 0.8],
-      [0.1, 0.8, 0.9, 0.8, 0.1],
-      [0.7, 0.9, 0.8, 0.2, 0.1],
-      [0.9, 0.9, 0.2, 0.1, 0.1],
-    ];
-
-    // 3x3 edge-detecting filter
-    var filter = [
-      [-1, 0, 1],
-      [-2, 0, 2],
-      [-1, 0, 1],
-    ];
-
-    // Compute convolution output (3x3)
-    var output = [];
-    for (var y = 0; y < 3; y++) {
-      var row = [];
-      for (var x = 0; x < 3; x++) {
-        var val = 0;
-        for (var fy = 0; fy < 3; fy++)
-          for (var fx = 0; fx < 3; fx++)
-            val += img[y + fy][x + fx] * filter[fy][fx];
-        row.push(val);
-      }
-      output.push(row);
-    }
-
-    // Normalize output for display
-    var omin = Infinity, omax = -Infinity;
-    for (var y = 0; y < 3; y++)
-      for (var x = 0; x < 3; x++) {
-        if (output[y][x] < omin) omin = output[y][x];
-        if (output[y][x] > omax) omax = output[y][x];
-      }
-
-    function makeGrid(data, rows, cols, colorFn, labelText) {
-      var block = document.createElement('div');
-      block.className = 'grid-block';
-
-      var lbl = document.createElement('div');
-      lbl.className = 'grid-label';
-      lbl.textContent = labelText;
-      block.appendChild(lbl);
-
-      var grid = document.createElement('div');
-      grid.className = 'pixel-grid';
-      grid.style.gridTemplateColumns = 'repeat(' + cols + ', 1.8em)';
-
-      for (var r = 0; r < rows; r++) {
-        for (var c = 0; c < cols; c++) {
-          var px = document.createElement('span');
-          px.className = 'px';
-          var v = data[r][c];
-          var result = colorFn(v);
-          px.style.background = result.bg;
-          px.style.color = result.fg;
-          px.textContent = v.toFixed ? (Math.abs(v) < 10 ? v.toFixed(1) : Math.round(v).toString()) : v.toString();
-          grid.appendChild(px);
+      if (!name) continue;
+      while (name.length < targetLen) {
+        var c = null;
+        for (var k = Math.min(order, name.length); k >= 1; k--) {
+          c = select(chain, name.slice(-k));
+          if (c !== null) break;
         }
+        if (c === null) break;
+        name += c;
       }
-      block.appendChild(grid);
-      return block;
+      parts.push(name);
     }
+    return parts.join(' ');
+  }
 
-    function opSymbol(text) {
-      var el = document.createElement('div');
-      el.className = 'op';
-      el.textContent = text;
-      return el;
+  function chainFor(order) { return data['order' + order][catEl.value]; }
+
+  function trainingSet() {
+    var set = {};
+    data.names[catEl.value].forEach(function(n) { set[n.toLowerCase()] = true; });
+    return set;
+  }
+
+  // ── Views ───────────────────────────────────────────────────────
+
+  function generate() {
+    var order = +orderEl.value;
+    var chain = chainFor(order);
+    var training = trainingSet();
+    namesEl.textContent = '';
+    for (var i = 0; i < 18; i++) {
+      var n = markovName(chain, order);
+      var div = document.createElement('div');
+      div.textContent = n;
+      if (training[n.toLowerCase()]) div.className = 'copy';
+      namesEl.appendChild(div);
     }
+  }
 
-    // Input image — blue scale
-    convContainer.appendChild(makeGrid(img, 5, 5, function(v) {
-      var a = (v * 0.7 + 0.1).toFixed(2);
-      return { bg: 'rgba(15, 52, 96, ' + a + ')', fg: v > 0.5 ? '#ddd' : '#888' };
-    }, 'Input (5\u00d75)'));
+  function peek() {
+    var order = +orderEl.value;
+    var chain = chainFor(order);
+    var ctx = ctxEl.value;
+    distEl.textContent = '';
+    if (!ctx) { ctxNote.textContent = ''; return; }
 
-    convContainer.appendChild(opSymbol('\u2217'));
+    // Same backoff as generation: longest suffix of ctx (up to order) that exists.
+    var used = null;
+    for (var k = Math.min(order, ctx.length); k >= 1; k--) {
+      var s = ctx.slice(-k);
+      if (chain[s] && !META[s]) { used = s; break; }
+    }
+    if (!used) {
+      ctxNote.textContent = 'never seen at any order up to ' + order + ' (a dead end)';
+      return;
+    }
+    ctxNote.textContent = (used === ctx.slice(-Math.min(order, ctx.length)))
+      ? 'context "' + used + '"'
+      : 'backed off to "' + used + '"';
 
-    // Filter — red/blue diverging
-    convContainer.appendChild(makeGrid(filter, 3, 3, function(v) {
-      if (v > 0) return { bg: 'rgba(233, 69, 96, ' + (v * 0.4).toFixed(2) + ')', fg: '#eee' };
-      if (v < 0) return { bg: 'rgba(15, 52, 96, ' + (-v * 0.4).toFixed(2) + ')', fg: '#eee' };
-      return { bg: 'rgba(255,255,255,0.05)', fg: '#666' };
-    }, 'Filter (3\u00d73)'));
+    var row = chain[used];
+    var total = chain.table_len[used];
+    var entries = Object.keys(row).map(function(c) { return [c, row[c] / total]; });
+    entries.sort(function(a, b) { return b[1] - a[1]; });
+    entries.slice(0, 12).forEach(function(e) {
+      var r = document.createElement('div');
+      r.className = 'row';
+      var ch = document.createElement('span'); ch.className = 'ch'; ch.textContent = e[0];
+      var pct = document.createElement('span'); pct.className = 'pct'; pct.textContent = (e[1] * 100).toFixed(1) + '%';
+      var bar = document.createElement('span'); bar.className = 'bar'; bar.style.width = Math.max(2, e[1] * 300) + 'px';
+      r.appendChild(ch); r.appendChild(pct); r.appendChild(bar);
+      distEl.appendChild(r);
+    });
+  }
 
-    convContainer.appendChild(opSymbol('='));
-
-    // Output — red scale based on activation strength
-    convContainer.appendChild(makeGrid(output, 3, 3, function(v) {
-      var norm = omax !== omin ? (v - omin) / (omax - omin) : 0.5;
-      var a = (norm * 0.8 + 0.1).toFixed(2);
-      return { bg: 'rgba(233, 69, 96, ' + a + ')', fg: '#eee' };
-    }, 'Output (3\u00d73)'));
-  })();
-
-  // ── Smooth scroll for nav clicks ────────────────────────────
-  var navMap = {
-    'nav-markov': 'markov',
-    'nav-higher': 'higher-order',
-    'nav-rnn': 'rnn',
-    'nav-lstm': 'lstm',
-    'nav-transformer': 'transformer',
-    'nav-cnn': 'cnn-section',
-    'nav-apps': 'applications-section',
-    'nav-landscape': 'bigger-picture',
-    'nav-realworld': 'real-world',
-  };
-  Object.keys(navMap).forEach(function(navId) {
-    var el = document.getElementById(navId);
-    if (el) {
-      el.style.cursor = 'pointer';
-      el.addEventListener('click', function() {
-        var target = document.getElementById(navMap[navId]);
-        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  function stats() {
+    var training = trainingSet();
+    statsEl.textContent = '';
+    for (var order = 1; order <= 4; order++) {
+      var chain = chainFor(order);
+      var contexts = Object.keys(chain).filter(function(k) { return !META[k]; }).length;
+      var copies = 0, example = '';
+      for (var i = 0; i < 500; i++) {
+        var n = markovName(chain, order);
+        if (training[n.toLowerCase()]) copies++;
+        else if (!example && n.length > 3) example = n;
+      }
+      var tr = document.createElement('tr');
+      [order, contexts.toLocaleString(), (copies / 5).toFixed(1) + '%', example].forEach(function(v, j) {
+        var td = document.createElement('td');
+        td.textContent = v;
+        if (j < 3) td.className = 'num';
+        tr.appendChild(td);
       });
+      statsEl.appendChild(tr);
     }
-  });
+  }
+
+  function refresh() { orderVal.textContent = orderEl.value; generate(); peek(); }
+
+  fetch('markov_chains.json')
+    .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(d) {
+      data = d;
+      statusEl.textContent = '';
+      refresh();
+      stats();
+      document.getElementById('gen').addEventListener('click', generate);
+      orderEl.addEventListener('input', refresh);
+      catEl.addEventListener('change', function() { refresh(); stats(); });
+      ctxEl.addEventListener('input', peek);
+    })
+    .catch(function(err) {
+      statusEl.textContent = 'Could not load markov_chains.json (' + err.message +
+        '). Serve this folder with: python3 -m http.server';
+    });
 })();
 </script>
 
