@@ -59,9 +59,10 @@ N characters, is where this repo stops.
 
 ## Where the story continues
 
-Neural sequence models (RNN, LSTM, transformer) used to live here, generating the
-same names. They moved to [`../machine_learning`](../machine_learning), exhibits 10-13,
-where each one gets a task that actually exercises what it is for.
+Neural sequence models (RNN, LSTM, transformer) used to live here too, generating
+the same names. They were removed: name generation is the right showcase for a
+Markov chain, but it exercises almost none of what those models are for. They are
+in this repo's history (the initial commit) for anyone curious.
 
 ## Training data
 
@@ -77,3 +78,7 @@ Source: [repushko/mythology_names_dataset](https://github.com/repushko/mythology
 The order-1 generator follows [donjon's Markov Name Generator](https://donjon.bin.sh/code/name/),
 a public-domain RPG name generator that builds frequency tables for name length and
 letter pairs from sample names.
+
+## License
+
+Code is MIT licensed (see `LICENSE`). The training names come from a CC0 dataset.

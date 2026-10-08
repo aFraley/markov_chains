@@ -41,7 +41,7 @@ THE EVOLUTION FROM HERE:
     -> The state of the art in language modeling until ~2010
 
 Every step is still a fixed window of the last N symbols. What comes after
-that window (RNNs, LSTMs, transformers) lives in ../machine_learning.
+that window (RNNs, LSTMs, transformers) is outside the scope of this repo.
 =============================================================================
 """
 
