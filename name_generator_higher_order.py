@@ -18,8 +18,9 @@ With ~45 training names, many 2-char or 3-char sequences will never appear.
 We solve this with BACKOFF: try order-N first, if that context was never
 seen, fall back to order-(N-1), down to order-1.
 
-This backoff concept is important in NLP and is one reason neural networks
-are powerful: they generalize to unseen contexts instead of just falling back.
+This is the "stupid backoff" of classic n-gram language models. Its smarter
+descendants (Katz backoff, Kneser-Ney smoothing) reserve probability mass for
+unseen contexts instead of just falling back.
 
 Example with order-3, context "xqz":
   "xqz" -> not in chain -> try "qz" -> not in chain -> try "z" -> found!
@@ -141,9 +142,8 @@ def markov_name(chain: dict, order: int) -> str:
     training, we shorten it by one character and try again, down to 1 char.
 
     This is exactly the "stupid backoff" strategy used in traditional NLP
-    n-gram language models. Neural networks don't need this because they
-    generalize: even for unseen contexts, the network produces a reasonable
-    probability distribution based on similar contexts it HAS seen.
+    n-gram language models (Brants et al., 2007). It never asks how much to
+    trust the shorter context; it just takes it.
 
     Args:
         chain: A scaled Markov chain built by construct_chain().
@@ -313,8 +313,8 @@ def demo():
     print("Order 1: Very random, often gibberish. Each char is independent.")
     print("Order 2: Noticeably better. Captures common pairs like 'th', 'ar'.")
     print("Order 3: Even more realistic, but may copy training names.")
-    print("         (This is OVERFITTING — too much memorization, too little")
-    print("         generalization. Neural networks handle this better.)\n")
+    print("         (This is OVERFITTING: too much memorization, too little")
+    print("         generalization. Raising the order trades novelty for fluency.)\n")
 
 
 if __name__ == "__main__":
